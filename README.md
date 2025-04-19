@@ -75,4 +75,28 @@ The application uses mock data stored in JSON format to simulate real-world ener
 npm run build
 ```
 
-This will generate a static export that can be deployed to GitHub Pages or any static hosting service. 
+This will generate a static export that can be deployed to GitHub Pages or any static hosting service.
+
+## Deployment to GitHub Pages
+
+This project is configured for automatic deployment to GitHub Pages using GitHub Actions.
+
+### How it works:
+
+1. When you push to the `main` branch, the GitHub Actions workflow will automatically:
+   - Build the Next.js application
+   - Export static files to the `out` directory
+   - Deploy the contents to GitHub Pages
+
+### Manual deployment:
+
+If you need to deploy manually:
+
+1. Build the project:
+```bash
+npm run build
+```
+
+2. This creates a static export in the `out` directory, which you can deploy to any static hosting service.
+
+3. The deployed site will be available at: https://michae1michae1.github.io/TechnologyModule/ 

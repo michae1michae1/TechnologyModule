@@ -2,6 +2,7 @@
   "name": "air-force-technology-dashboard",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://michae1michae1.github.io/TechnologyModule",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
