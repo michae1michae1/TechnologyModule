@@ -1,11 +1,11 @@
-# Air Force Energy Technology Dashboard
+# Energy Technology Dashboard
 
-A single-page, full-screen dashboard UI for Air Force energy managers to explore, analyze, and compare technologies that support base-level energy resiliency.
+A single-page, full-screen dashboard UI for energy managers to explore, analyze, and compare technologies that support base-level energy resiliency.
 
 ## Features
 
 - **FilterBar**: Multi-select dropdowns for filtering by Installation, Technology Type, Vendor, and Status
-- **MapView**: Interactive map showing Air Force installations with technologies
+- **MapView**: Interactive map showing installations with technologies
 - **TechTable**: Sortable and filterable data table with all technology records
 - **DetailsPane**: Slide-in panel with detailed information about a selected technology
 - **CompareSection**: Side-by-side comparison of up to 3 technologies
