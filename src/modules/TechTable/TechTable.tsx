@@ -545,7 +545,7 @@ export default function TechTable() {
           </AnimatePresence>
           
           <div className="overflow-x-auto">
-            <div className="max-h-[500px] overflow-y-auto">
+            <div className="max-h-[700px] overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-slate-900">
                   {table.getHeaderGroups().map((headerGroup) => (
