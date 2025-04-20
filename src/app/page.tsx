@@ -11,7 +11,7 @@ export default function Dashboard() {
   const { isDetailsOpen } = useDetails();
   
   return (
-    <main className="flex flex-col min-h-screen max-w-[1920px] mx-auto">
+    <main className="flex flex-col bg-slate-950 min-h-screen max-w-[1920px] mx-auto">
       <div className="flex flex-col flex-grow">
         <section className="w-full">
           <MapView />
