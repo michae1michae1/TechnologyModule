@@ -79,6 +79,33 @@ export default function TechTable() {
     );
   };
   
+  // Render resiliency impact bar
+  const renderResiliencyBar = (impact: number) => {
+    // Scale the impact for visualization (most values are between 6-15)
+    // Calculate as percentage of maximum expected value (15)
+    const scaledWidth = (impact / 15) * 100;
+    
+    // Get appropriate color based on impact value
+    const getResiliencyColor = (value: number) => {
+      // Scale is 1-15 according to the app standards
+      if (value > 10) return 'bg-green-500';
+      if (value > 5) return 'bg-yellow-500';
+      return 'bg-red-500';
+    };
+    
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-20 bg-gray-700 rounded-full h-2.5">
+          <div 
+            className={`${getResiliencyColor(impact)} h-2.5 rounded-full`}
+            style={{ width: `${scaledWidth}%` }}
+          ></div>
+        </div>
+        <span>{impact}/15</span>
+      </div>
+    );
+  };
+  
   // Render gap level badge
   const renderGapLevel = (level: 'High' | 'Medium' | 'Low') => {
     const colors = {
@@ -313,7 +340,7 @@ export default function TechTable() {
           )}
         </div>
       ),
-      cell: ({ row }) => row.original.resiliencyImpact,
+      cell: ({ row }) => renderResiliencyBar(row.original.resiliencyImpact),
     },
   ];
   
@@ -484,7 +511,7 @@ export default function TechTable() {
         </div>
       ) : (
         <>
-          <div className="p-3 bg-slate-900 border border-slate-700 rounded-t-lg flex flex-wrap justify-between items-center">
+          <div className="p-3 bg-slate-900 border-t border-l border-r border-slate-700 rounded-t-lg flex flex-wrap justify-between items-center">
             <div className="flex flex-wrap gap-2 items-center">
               <FilterSelect 
                 column="status" 
@@ -544,12 +571,12 @@ export default function TechTable() {
             {showAnalytics && <AnalyticsSection />}
           </AnimatePresence>
           
-          <div className="overflow-x-auto border-x border-slate-700">
-            <div className="max-h-[700px] overflow-y-auto">
+          <div className="overflow-x-auto border-x border-slate-700 scrollbar-hide">
+            <div className="max-h-[700px] overflow-y-auto scrollbar-hide">
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-slate-900">
                   {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id} className="hover:bg-slate-800 border-b-0">
+                    <TableRow key={headerGroup.id} className="hover:bg-slate-900 border-b-0">
                       {headerGroup.headers.map((header) => (
                         <TableHead key={header.id} className="text-slate-300 border-b border-slate-700">
                           {header.isPlaceholder

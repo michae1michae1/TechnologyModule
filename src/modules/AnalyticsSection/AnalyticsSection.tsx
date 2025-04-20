@@ -321,7 +321,7 @@ export default function AnalyticsSection() {
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-full bg-slate-950 text-white p-4 overflow-hidden"
+      className="w-full bg-slate-900 text-white p-4 overflow-hidden border-x border-slate-700"
     >
       <h2 className="text-xl font-semibold mb-4">Technology Analytics Dashboard</h2>
       
