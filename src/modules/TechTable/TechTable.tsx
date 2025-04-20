@@ -458,9 +458,9 @@ export default function TechTable() {
   };
 
   return (
-    <div className="w-full bg-slate-950 overflow-hidden">
+    <div className="w-full p-4 bg-slate-950 overflow-hidden">
       {isTableCollapsed ? (
-        <div className="p-3 bg-slate-900 border border-slate-700 flex justify-between items-center">
+        <div className="p-3 bg-slate-900 border border-slate-700 rounded-t-lg flex justify-between items-center">
           <h2 className="text-base font-medium text-white">Technology Data Table</h2>
           
           <div className="flex items-center">
@@ -484,7 +484,7 @@ export default function TechTable() {
         </div>
       ) : (
         <>
-          <div className="p-3 bg-slate-900 border border-slate-700 flex flex-wrap justify-between items-center">
+          <div className="p-3 bg-slate-900 border border-slate-700 rounded-t-lg flex flex-wrap justify-between items-center">
             <div className="flex flex-wrap gap-2 items-center">
               <FilterSelect 
                 column="status" 
@@ -544,7 +544,7 @@ export default function TechTable() {
             {showAnalytics && <AnalyticsSection />}
           </AnimatePresence>
           
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto border-x border-slate-700">
             <div className="max-h-[700px] overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-slate-900">
@@ -596,6 +596,7 @@ export default function TechTable() {
               </Table>
             </div>
           </div>
+          <div className="h-2 bg-slate-900 border-x border-b border-slate-700 rounded-b-lg"></div>
         </>
       )}
     </div>

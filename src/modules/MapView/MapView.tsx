@@ -5,8 +5,9 @@ import { useTechnologyData } from '@/hooks/useTechnologyData';
 import { useFilters } from '@/context/FilterContext';
 import { useDetails } from '@/context/DetailsContext';
 import { TechnologyRecord } from '@/types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { WorldMap } from '@/components/ui/world-map';
+import { ChevronDown, ChevronUp, MapIcon, Loader2 } from 'lucide-react';
 
 // Memoized marker component to prevent excessive re-renders
 const InstallationMarker = memo(function InstallationMarker({
@@ -125,12 +126,16 @@ export default function MapView() {
   const { setSelectedTech, openDetails } = useDetails();
   const [hoveredInstallation, setHoveredInstallation] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 });
+  const [isMapVisible, setIsMapVisible] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Calculate installation data once with proper memoization
   const installationData = useMemo(() => {
-    const uniqueMap = new Map();
-    const techCounts = new Map();
-    const techLists = new Map<string, string[]>();
+    // Ensure we're using JavaScript's built-in Map constructor by creating variables first
+    const JSMap = Map;
+    const uniqueMap = new JSMap();
+    const techCounts = new JSMap();
+    const techLists = new JSMap<string, string[]>();
     
     allRecords.forEach(record => {
       if (record.geo && !uniqueMap.has(record.installation)) {
@@ -201,7 +206,9 @@ export default function MapView() {
   
   // Get marker color - memoize based on filters
   const getMarkerColors = useMemo(() => {
-    const colorMap = new Map();
+    // Ensure we're using JavaScript's built-in Map constructor
+    const JSMap = Map;
+    const colorMap = new JSMap();
     
     installationData.forEach(installation => {
       if (filters.installation.length > 0) {
@@ -225,36 +232,110 @@ export default function MapView() {
     return installationData.find(inst => inst.name === hoveredInstallation);
   }, [hoveredInstallation, installationData]);
 
+  // Handle toggle map click with loading state
+  const handleToggleMap = () => {
+    if (isMapVisible) {
+      // When hiding, no delay needed
+      setIsMapVisible(false);
+    } else {
+      // When showing, set loading state first
+      setIsLoading(true);
+      
+      // Set a small timeout to simulate loading and prevent flickering
+      setTimeout(() => {
+        setIsMapVisible(true);
+        
+        // Continue showing loading indicator for a short time after expansion starts
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
+      }, 600);
+    }
+  };
+
   return (
     <div className="w-full p-4 relative bg-slate-950">
-      <div className="relative w-full aspect-[16/5] overflow-hidden border-2 border-slate-700 rounded-lg shadow-lg">
-        <div className="absolute top-4 left-4 z-10 bg-slate-800 bg-opacity-80 p-2 rounded-md shadow-md border border-slate-700">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-2">
+          <MapIcon size={20} className="text-slate-300" />
           <h2 className="text-white font-semibold">Installation Map</h2>
-          <div className="flex items-center mt-1 gap-2 text-xs text-slate-300">
-            <span className="inline-block w-3 h-3 bg-rose-500 rounded-full"></span>
-            <span>Installation</span>
-          </div>
+          
+          {/* Loading progress bar */}
+          {isLoading && (
+            <div className="ml-2 h-1 w-24 bg-slate-700 overflow-hidden rounded-full">
+              <div className="h-full bg-blue-500 animate-pulse-x"></div>
+            </div>
+          )}
         </div>
         
-        <WorldMap />
-        
-        {/* Installation markers */}
-        <div className="absolute inset-0">
-          {installationData.map(installation => (
-            <InstallationMarker
-              key={installation.name}
-              name={installation.name}
-              lat={installation.lat}
-              lng={installation.lng}
-              count={installation.count}
-              isSelected={filters.installation.includes(installation.name)}
-              markerColor={getMarkerColors.get(installation.name) || '#f43f5e'}
-              onClick={() => handleInstallationClick(installation.name)}
-              onHover={handleMarkerHover}
-            />
-          ))}
-        </div>
+        {/* Toggle button */}
+        <button
+          onClick={handleToggleMap}
+          disabled={isLoading}
+          className={`flex items-center gap-1 text-sm ${
+            isLoading 
+              ? 'bg-slate-700 text-slate-400 cursor-not-allowed' 
+              : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+          } px-3 py-1.5 rounded-md transition-colors duration-200`}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              <span>Loading...</span>
+            </>
+          ) : isMapVisible ? (
+            <>
+              <ChevronUp size={16} />
+              <span>Hide Map</span>
+            </>
+          ) : (
+            <>
+              <ChevronDown size={16} />
+              <span>Show Map</span>
+            </>
+          )}
+        </button>
       </div>
+      
+      <AnimatePresence>
+        {isMapVisible && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="relative w-full aspect-[16/5] overflow-hidden border-2 border-slate-700 rounded-lg shadow-lg">
+              <div className="absolute top-4 left-4 z-10 bg-slate-800 bg-opacity-80 p-2 rounded-md shadow-md border border-slate-700">
+                <div className="flex items-center mt-1 gap-2 text-xs text-slate-300">
+                  <span className="inline-block w-3 h-3 bg-rose-500 rounded-full"></span>
+                  <span>Installation</span>
+                </div>
+              </div>
+              
+              <WorldMap />
+              
+              {/* Installation markers */}
+              <div className="absolute inset-0">
+                {installationData.map(installation => (
+                  <InstallationMarker
+                    key={installation.name}
+                    name={installation.name}
+                    lat={installation.lat}
+                    lng={installation.lng}
+                    count={installation.count}
+                    isSelected={filters.installation.includes(installation.name)}
+                    markerColor={getMarkerColors.get(installation.name) || '#f43f5e'}
+                    onClick={() => handleInstallationClick(installation.name)}
+                    onHover={handleMarkerHover}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Fixed tooltip that follows the cursor */}
       {hoveredInstallationData && (
