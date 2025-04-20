@@ -183,7 +183,7 @@ const SpiderChart = ({ data }: { data: ExtendedTechnologyRecord[] }) => {
   };
   
   return (
-    <div className="bg-slate-900 rounded-lg p-3 mb-4">
+    <div className="rounded-lg p-3 mb-4">
       <div className="w-full h-56">
         <Radar data={chartData} options={options} />
       </div>
@@ -200,19 +200,19 @@ const FinancialDetails = ({ data }: { data: ExtendedTechnologyRecord[] }) => {
   const totalCapex = data.reduce((sum, item) => sum + item.capex, 0);
   
   return (
-    <div className="bg-slate-900 rounded-lg p-4 mb-4">
+    <div className="rounded-lg p-4 mb-4">
       <h3 className="text-lg font-medium mb-2">Financial Analysis</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-slate-800 rounded p-3">
+        <div className="border border-slate-700 rounded p-3">
           <h4 className="text-sm text-slate-400">Average CAPEX</h4>
           <p className="text-xl font-semibold">${avgCapex.toFixed(2)}M</p>
           <p className="text-xs text-slate-400">Total: ${totalCapex.toFixed(2)}M</p>
         </div>
-        <div className="bg-slate-800 rounded p-3">
+        <div className="border border-slate-700 rounded p-3">
           <h4 className="text-sm text-slate-400">Average OPEX</h4>
           <p className="text-xl font-semibold">${avgOpex.toFixed(2)}M/yr</p>
         </div>
-        <div className="bg-slate-800 rounded p-3">
+        <div className="border border-slate-700 rounded p-3">
           <h4 className="text-sm text-slate-400">Average NPV</h4>
           <p className="text-xl font-semibold">${avgNpv.toFixed(2)}M</p>
           <p className="text-xs text-slate-400 mt-1">{avgNpv > 0 ? 'Positive Return' : 'Negative Return'}</p>
@@ -323,7 +323,6 @@ export default function AnalyticsSection() {
       transition={{ duration: 0.3 }}
       className="w-full bg-slate-900 text-white p-4 overflow-hidden border-x border-slate-700"
     >
-      <h2 className="text-xl font-semibold mb-4">Technology Analytics Dashboard</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SpiderChart data={enrichedData} />

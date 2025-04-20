@@ -179,6 +179,9 @@ export default function TechTable() {
         </div>
       ),
       cell: ({ row }) => <div className="font-medium">{row.original.technology}</div>,
+      filterFn: (row, id, filterValue) => {
+        return filterValue.includes(row.getValue(id));
+      },
     },
     {
       accessorKey: "status",
@@ -371,7 +374,7 @@ export default function TechTable() {
     
     if (filters.technologyType.length > 0) {
       newColumnFilters.push({
-        id: 'techNeeds',
+        id: 'technology',
         value: filters.technologyType,
       });
     }
