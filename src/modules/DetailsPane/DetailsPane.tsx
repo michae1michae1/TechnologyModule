@@ -47,7 +47,7 @@ const mockStrategiesData = [
 ];
 
 // Mock technology descriptions
-const mockTechnologyDescriptions = {
+const mockTechnologyDescriptions: Record<string, string> = {
   'Microgrid Controller': 'Advanced digital control system that manages distributed energy resources within a microgrid, enabling intelligent load balancing, demand response, and islanding capabilities during grid outages. Provides real-time monitoring and autonomous decision-making for optimal energy flow management.',
   'Solar + Storage': 'Integrated solution combining photovoltaic solar arrays with battery energy storage systems, designed for resilient power generation and load shifting. Features intelligent power electronics for seamless grid connection or islanded operation during outages.',
   'AI Power Forecasting': 'Machine learning platform that analyzes historical data, weather patterns, and energy consumption trends to predict future power needs with 95%+ accuracy. Enables proactive energy management and optimized resource allocation.',
@@ -59,8 +59,11 @@ const mockTechnologyDescriptions = {
   'Energy Storage System': 'Large-scale battery systems designed to store excess energy and discharge during peak demand or outages. Provides grid stability, frequency regulation, and backup power capabilities with millisecond response times.'
 };
 
+// Define a type for the keys of mockTechnologyDescriptions
+type TechnologyKey = keyof typeof mockTechnologyDescriptions;
+
 // Mock vendor descriptions 
-const mockVendorDescriptions = {
+const mockVendorDescriptions: Record<string, string> = {
   'PowerGrid Solutions': 'Industry leader in grid modernization technologies with over 25 years of experience delivering resilient power solutions for critical infrastructure. Known for innovative microgrid controllers and energy management systems with military-grade cybersecurity protections.',
   'ResilientPower Inc': 'Specialized provider of hardened power systems for defense and aerospace applications. Employs former DoD personnel with extensive knowledge of military installation requirements and security protocols.',
   'SolarEdge Technologies': 'Premier manufacturer of solar inverters and power optimizers with advanced grid services capabilities. Offers comprehensive monitoring platforms and smart energy management solutions designed for seamless integration.',
@@ -84,13 +87,27 @@ const tabOptions = [
   { id: 'documents', label: 'Documents', icon: <FileStack size={16} /> }
 ];
 
+// Define an interface for selectedTech
+interface SelectedTech {
+  id: string;
+  technology: string; // This could be any string
+  vendor: string;
+  cost: number;
+  installation: string;
+  gapLevel: 'High' | 'Medium' | 'Low';
+  resiliencyImpact: number;
+  status?: string;
+  outreachLevel?: string;
+  techNeeds: string[];
+}
+
 const TechDetails = memo(function TechDetails({
   selectedTech,
   isInCompare,
   onToggleCompare,
   onHideDetails 
 }: {
-  selectedTech: any;
+  selectedTech: SelectedTech;
   isInCompare: boolean;
   onToggleCompare: () => void;
   onHideDetails: () => void; 
