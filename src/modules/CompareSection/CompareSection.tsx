@@ -77,8 +77,8 @@ export default function CompareSection() {
                     {item.record && (
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-400">Status</span>
-                          <StatusBadge status={item.record.status} />
+                          <span className="text-xs text-slate-400">Outreach</span>
+                          <OutreachBadge record={item.record} />
                         </div>
                         
                         <div>
@@ -134,16 +134,33 @@ export default function CompareSection() {
   );
 }
 
-function StatusBadge({ status }: { status: 'Prototype' | 'Planning' | 'Deployment' }) {
+function OutreachBadge({ record }: { record: TechnologyRecord }) {
+  // Define colors for outreach levels - match the same colors used in TechTable
   const colors = {
-    Prototype: 'bg-purple-500 text-white',
-    Planning: 'bg-black border border-white text-white',
-    Deployment: 'bg-green-500 text-white',
+    'Level 1': 'bg-purple-500 text-white',
+    'Level 2': 'bg-blue-500 text-white',
+    'Level 3': 'bg-yellow-500 text-black',
+    'Level 4': 'bg-green-500 text-white',
   };
   
+  // Use outreachLevel if available, otherwise map from status
+  let outreachLevel: 'Level 1' | 'Level 2' | 'Level 3' | 'Level 4';
+  
+  if (record.outreachLevel) {
+    outreachLevel = record.outreachLevel as 'Level 1' | 'Level 2' | 'Level 3' | 'Level 4';
+  } else {
+    // Fallback mapping from old status values - same as in TechTable
+    const statusToOutreach: Record<string, 'Level 1' | 'Level 2' | 'Level 3' | 'Level 4'> = {
+      'Prototype': 'Level 1',
+      'Planning': 'Level 2',
+      'Deployment': 'Level 4',
+    };
+    outreachLevel = statusToOutreach[record.status] || 'Level 3';
+  }
+  
   return (
-    <span className={`${colors[status]} px-2 py-0.5 rounded text-xs font-medium inline-block`}>
-      {status}
+    <span className={`${colors[outreachLevel]} px-2 py-0.5 rounded text-xs font-medium inline-block`}>
+      {outreachLevel}
     </span>
   );
 }

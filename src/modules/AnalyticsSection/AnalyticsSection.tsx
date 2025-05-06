@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTechnologyData } from '@/hooks/useTechnologyData';
 import { useFilters } from '@/context/FilterContext';
+import { useCompare } from '@/context/CompareContext';
 import { motion } from 'framer-motion';
 import {
   Chart as ChartJS,
@@ -105,6 +106,27 @@ const enrichTechnologyData = (records: any[]): ExtendedTechnologyRecord[] => {
       suppliersReliability
     };
   });
+};
+
+// Empty State Component for when no items are pinned
+const EmptyAnalyticsState = () => {
+  return (
+    <div className="w-full flex flex-col items-center justify-center py-16 text-center">
+      <div className="bg-slate-800 p-6 rounded-lg max-w-md shadow-lg border border-slate-700">
+        <h3 className="text-xl font-bold text-white mb-2">No Items to Analyze</h3>
+        <p className="text-slate-400 mb-4">
+          Please pin items to the comparison to see analytics. You can pin up to 3 items by clicking the pin icon in the table.
+        </p>
+        <div className="animate-pulse flex justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+            <line x1="12" y1="17" x2="12" y2="17.01" />
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="14" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // Spider Chart Component
@@ -309,11 +331,35 @@ const TechnologyEvaluation = ({ data }: { data: ExtendedTechnologyRecord[] }) =>
 };
 
 export default function AnalyticsSection() {
+  const { compareItems } = useCompare();
   const { filters } = useFilters();
-  const { filteredRecords } = useTechnologyData(filters);
+  const { allRecords } = useTechnologyData(filters);
+  
+  // Get full technology records for the compare items
+  const pinnedRecords = React.useMemo(() => {
+    return compareItems.map(item => {
+      const record = allRecords.find(r => r.id === item.id);
+      return record;
+    }).filter(Boolean); // Filter out any items that don't have a corresponding record
+  }, [compareItems, allRecords]);
   
   // Enrich data with analytics properties
-  const enrichedData = enrichTechnologyData(filteredRecords);
+  const enrichedData = enrichTechnologyData(pinnedRecords);
+  
+  // If no items are pinned, show the empty state
+  if (pinnedRecords.length === 0) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: 'auto' }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full bg-slate-900 text-white p-4 overflow-hidden border-x border-slate-700"
+      >
+        <EmptyAnalyticsState />
+      </motion.div>
+    );
+  }
   
   return (
     <motion.div 

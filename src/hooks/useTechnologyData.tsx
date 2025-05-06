@@ -24,9 +24,25 @@ export function useTechnologyData(filters: FilterState) {
         return false;
       }
       
-      // Filter by status
-      if (filters.status.length > 0 && !filters.status.includes(record.status)) {
-        return false;
+      // Filter by status (which now serves as "outreach" filter)
+      if (filters.status.length > 0) {
+        // If record has an outreachLevel, check against that
+        if (record.outreachLevel) {
+          if (!filters.status.includes(record.outreachLevel)) {
+            return false;
+          }
+        } else {
+          // Otherwise map the status to an outreach level and check
+          const statusToOutreach = {
+            'Prototype': 'Level 1',
+            'Planning': 'Level 2',
+            'Deployment': 'Level 4',
+          };
+          const outreachLevel = statusToOutreach[record.status as keyof typeof statusToOutreach] || 'Level 3';
+          if (!filters.status.includes(outreachLevel)) {
+            return false;
+          }
+        }
       }
       
       return true;
@@ -38,13 +54,15 @@ export function useTechnologyData(filters: FilterState) {
     const installations = [...new Set(records.map(record => record.installation))];
     const technologies = [...new Set(records.map(record => record.technology))];
     const vendors = [...new Set(records.map(record => record.vendor))];
-    const statuses = [...new Set(records.map(record => record.status))];
+    
+    // Get outreach levels, prioritizing actual outreachLevel field when available
+    const outreachLevels = ['Level 1', 'Level 2', 'Level 3', 'Level 4'];
     
     return {
       installations,
       technologies,
       vendors,
-      statuses
+      statuses: outreachLevels
     };
   }, [records]);
   

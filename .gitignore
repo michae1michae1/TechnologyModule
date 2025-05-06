@@ -5,11 +5,12 @@
 
 # testing
 /coverage
-
+/Examples
 # next.js
 /.next/
 /out/
 /build
+
 
 # production
 /build
