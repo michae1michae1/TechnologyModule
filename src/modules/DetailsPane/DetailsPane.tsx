@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import { useDetails } from '@/context/DetailsContext';
 import { useCompare } from '@/context/CompareContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,8 +14,11 @@ import {
   AlertTriangle, 
   FileStack,
   Cpu,
-  Building2
+  Building2,
+  Share2,
+  PenLine
 } from 'lucide-react';
+import { useState as useLocalState } from 'react';
 
 // Mock data for the new tabbed sections
 const mockGapsData = {
@@ -37,13 +40,14 @@ const mockGapsData = {
   ]
 };
 
+// Update mock strategies data to include contribution percentages
 const mockStrategiesData = [
-  { id: 's1', title: 'Distributed Energy Resources', description: 'Implement localized energy generation and storage systems to enhance resilience during grid outages' },
-  { id: 's2', title: 'Adaptive Cybersecurity Framework', description: 'Deploy AI-powered threat detection with automated response capabilities to mitigate evolving threats' },
-  { id: 's3', title: 'Redundant Communications Grid', description: 'Establish multi-modal communication pathways with automatic failover to ensure continuous operations' },
-  { id: 's4', title: 'Critical Infrastructure Hardening', description: 'Upgrade physical infrastructure to withstand intensified climate events and potential threats' },
-  { id: 's5', title: 'Autonomous System Backup', description: 'Integrate self-healing technologies that can operate independently during primary system failures' },
-  { id: 's6', title: 'Supply Chain Diversification', description: 'Develop multiple sourcing pathways for critical components to reduce dependency vulnerabilities' }
+  { id: 's1', title: 'Distributed Energy Resources', description: 'Implement localized energy generation and storage systems to enhance resilience during grid outages', contributionPercent: 45 },
+  { id: 's2', title: 'Adaptive Cybersecurity Framework', description: 'Deploy AI-powered threat detection with automated response capabilities to mitigate evolving threats', contributionPercent: 15 },
+  { id: 's3', title: 'Redundant Communications Grid', description: 'Establish multi-modal communication pathways with automatic failover to ensure continuous operations', contributionPercent: 10 },
+  { id: 's4', title: 'Critical Infrastructure Hardening', description: 'Upgrade physical infrastructure to withstand intensified climate events and potential threats', contributionPercent: 20 },
+  { id: 's5', title: 'Autonomous System Backup', description: 'Integrate self-healing technologies that can operate independently during primary system failures', contributionPercent: 5 },
+  { id: 's6', title: 'Supply Chain Diversification', description: 'Develop multiple sourcing pathways for critical components to reduce dependency vulnerabilities', contributionPercent: 5 }
 ];
 
 // Mock technology descriptions
@@ -76,15 +80,88 @@ const mockVendorDescriptions: Record<string, string> = {
   'MaintainAI Solutions': 'Predictive maintenance platform provider utilizing advanced machine learning for equipment health monitoring. Specializes in critical infrastructure applications with minimal false positive rates.'
 };
 
-// Tab options
+// Mock outreach level details
+const mockOutreachDetails: Record<'Level 1' | 'Level 2' | 'Level 3' | 'Level 4', {
+  description: string;
+  characteristics: string[];
+  requirements: string[];
+  timeline: string;
+}> = {
+  'Level 1': {
+    description: 'Initial prototype phase with limited deployment and testing',
+    characteristics: [
+      'Early stage development and testing',
+      'Limited user feedback',
+      'Focused technical validation',
+      'Small-scale implementation'
+    ],
+    requirements: [
+      'Basic functionality demonstration',
+      'Initial security assessment',
+      'Preliminary documentation',
+      'Test environment setup'
+    ],
+    timeline: '3-6 months'
+  },
+  'Level 2': {
+    description: 'Expanded testing with controlled deployment across select sites',
+    characteristics: [
+      'Multiple site testing',
+      'Structured user feedback',
+      'Integration validation',
+      'Performance monitoring'
+    ],
+    requirements: [
+      'Documented test results',
+      'Security compliance review',
+      'Training materials',
+      'Support procedures'
+    ],
+    timeline: '6-12 months'
+  },
+  'Level 3': {
+    description: 'Broad deployment with comprehensive operational validation',
+    characteristics: [
+      'Wide-scale implementation',
+      'Full system integration',
+      'Operational assessment',
+      'Performance optimization'
+    ],
+    requirements: [
+      'Full documentation suite',
+      'Security authorization',
+      'Training program',
+      'Maintenance procedures'
+    ],
+    timeline: '12-18 months'
+  },
+  'Level 4': {
+    description: 'Full operational capability with proven performance',
+    characteristics: [
+      'Enterprise-wide deployment',
+      'Proven reliability',
+      'Optimized performance',
+      'Full integration'
+    ],
+    requirements: [
+      'Operational certification',
+      'Security accreditation',
+      'Complete documentation',
+      'Support infrastructure'
+    ],
+    timeline: '18-24 months'
+  }
+};
+
+// Update tab options to remove documents
 const tabOptions = [
   { id: 'basics', label: 'Basics', icon: <TabletSmartphone size={16} /> },
   { id: 'technology', label: 'Technology', icon: <Cpu size={16} /> },
   { id: 'vendor', label: 'Vendor', icon: <Building2 size={16} /> },
+  { id: 'outreach', label: 'Outreach', icon: <Share2 size={16} /> },
   { id: 'gaps', label: 'Gaps', icon: <AlertTriangle size={16} /> },
   { id: 'strategies', label: 'Strategies', icon: <ShieldCheck size={16} /> },
-  { id: 'analytics', label: 'Analytics', icon: <BrainCircuit size={16} /> },
-  { id: 'documents', label: 'Documents', icon: <FileStack size={16} /> }
+  { id: 'notes', label: 'Notes', icon: <PenLine size={16} /> }
 ];
 
 // Define an interface for selectedTech
@@ -99,6 +176,8 @@ interface SelectedTech {
   status?: string;
   outreachLevel?: string;
   techNeeds: string[];
+  vendorDesc: string;
+  technologyDesc: string;
 }
 
 const TechDetails = memo(function TechDetails({
@@ -115,29 +194,47 @@ const TechDetails = memo(function TechDetails({
   const [leftActiveTab, setLeftActiveTab] = useState('basics');
   const [rightActiveTab, setRightActiveTab] = useState('gaps');
   
+  // Initialize notes from localStorage
+  const [notes, setNotes] = useLocalState<Record<string, string>>(() => {
+    if (typeof window !== 'undefined') {
+      const savedNotes = localStorage.getItem('techNotes');
+      return savedNotes ? JSON.parse(savedNotes) : {};
+    }
+    return {};
+  });
+
+  // Save notes to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('techNotes', JSON.stringify(notes));
+    }
+  }, [notes]);
+
   if (!selectedTech) return null;
 
-  // Helper functions for styling
+  // Update the resiliency color function for the new scale
   const getResiliencyColor = (value: number) => {
-    if (value > 10) return 'bg-green-500';
-    if (value > 5) return 'bg-yellow-500';
+    if (value >= 5.0) return 'bg-green-500';
+    if (value >= 2.5) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
   const getCostColor = (cost: number) => {
-    if (cost < 33) return 'bg-green-500';
-    if (cost < 66) return 'bg-yellow-500';
+    const maxCost = 10000; // 10M
+    const percentage = (cost / maxCost) * 100;
+    if (percentage < 33) return 'bg-green-500';
+    if (percentage < 66) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
   const getOutreachColor = (level: string) => {
     const colors = {
-      'Level 1': 'text-purple-400',
-      'Level 2': 'text-blue-400',
-      'Level 3': 'text-yellow-400',
-      'Level 4': 'text-green-400',
+      'Level 1': 'text-purple-500',
+      'Level 2': 'text-blue-500',
+      'Level 3': 'text-yellow-500',
+      'Level 4': 'text-green-500',
     };
-    return colors[level as keyof typeof colors] || 'text-purple-400';
+    return colors[level as keyof typeof colors] || 'text-purple-500';
   };
 
   const getOutreachLevel = () => {
@@ -162,6 +259,39 @@ const TechDetails = memo(function TechDetails({
     return 'text-red-400';
   };
   
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newNotes = { ...notes, [selectedTech.id]: e.target.value };
+    setNotes(newNotes);
+  };
+
+  // Update the notes rendering in both left and right content
+  const renderNotesContent = () => (
+    <div className="space-y-2">
+      <div className="text-slate-300 font-medium">Notes</div>
+      <textarea
+        value={notes[selectedTech.id] || ''}
+        onChange={handleNotesChange}
+        placeholder="Add notes about this technology..."
+        className="w-full h-24 bg-slate-800 text-slate-200 text-sm p-2 rounded border border-slate-700 focus:outline-none focus:border-blue-500 resize-none"
+      />
+    </div>
+  );
+
+  // Update renderGapLevel function to match TechTable styling
+  const renderGapLevel = (level: 'High' | 'Medium' | 'Low') => {
+    const colors = {
+      High: 'bg-red-500 text-white',
+      Medium: 'bg-yellow-500 text-black',
+      Low: 'bg-green-500 text-white',
+    };
+    
+    return (
+      <span className={`${colors[level]} px-2 py-1 rounded text-xs font-medium`}>
+        {level}
+      </span>
+    );
+  };
+
   // Render tab content based on selected tab
   const renderLeftTabContent = () => {
     switch (leftActiveTab) {
@@ -172,12 +302,16 @@ const TechDetails = memo(function TechDetails({
             <div className="mb-3">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-slate-400">Cost Estimate:</span>
-                <span className="text-white font-semibold">${Math.round((selectedTech.cost / 100) * 99000) + 1000}</span>
+                <span className="text-white font-semibold">
+                  {selectedTech.cost >= 1000 
+                    ? `$${(selectedTech.cost/1000).toFixed(1)}M` 
+                    : `$${selectedTech.cost}K`}
+                </span>
               </div>
               <div className="w-full bg-slate-700 rounded-full h-1.5">
                 <div 
                   className={`${getCostColor(selectedTech.cost)} h-1.5 rounded-full`}
-                  style={{ width: `${selectedTech.cost}%` }}
+                  style={{ width: `${Math.min((selectedTech.cost / 10000) * 100, 100)}%` }}
                 ></div>
               </div>
             </div>
@@ -206,7 +340,7 @@ const TechDetails = memo(function TechDetails({
           <div className="space-y-2">
             <div className="text-slate-300 font-medium">{selectedTech.technology}</div>
             <div className="bg-slate-800 p-3 rounded border border-slate-700">
-              <p className="text-slate-200 text-xs leading-relaxed">{techDescription}</p>
+              <p className="text-slate-200 text-xs leading-relaxed">{selectedTech.technologyDesc}</p>
             </div>
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-slate-400">Technology Category:</span>
@@ -223,23 +357,43 @@ const TechDetails = memo(function TechDetails({
         
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">{selectedTech.vendor}</div>
+            <div className="text-slate-300 font-medium">Vendor Profile</div>
             <div className="bg-slate-800 p-3 rounded border border-slate-700">
-              <p className="text-slate-200 text-xs leading-relaxed">{vendorDescription}</p>
+              <div className="text-sm text-slate-200 mb-2">{selectedTech.vendor}</div>
+              <div className="text-xs text-slate-400">{selectedTech.vendorDesc}</div>
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs text-slate-400">Vendor Rating:</span>
-              <div className="flex">
-                {[...Array(4)].map((_, i) => (
-                  <svg key={i} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-500">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
+          </div>
+        );
+      case 'outreach':
+        // Display outreach details
+        const outreachLevel = getOutreachLevel() as keyof typeof mockOutreachDetails;
+        const outreachDetails = mockOutreachDetails[outreachLevel];
+        return (
+          <div className="space-y-2">
+            <div className="text-slate-300 font-medium flex items-center gap-2">
+              Outreach Level: {renderOutreachBadge(outreachLevel)}
+            </div>
+            <div className="bg-slate-800 p-3 rounded border border-slate-700">
+              <div className="text-sm text-slate-200 mb-2">{outreachDetails.description}</div>
+              <div className="text-xs text-slate-400">Characteristics:</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {outreachDetails.characteristics.map((characteristic: string) => (
+                  <span key={characteristic} className="bg-slate-700 text-slate-200 text-xs px-1.5 py-0.5 rounded-sm">
+                    {characteristic}
+                  </span>
                 ))}
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-slate-600">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
               </div>
             </div>
+            <div className="text-slate-300 font-medium mt-2">Requirements:</div>
+            <div className="flex flex-wrap gap-1">
+              {outreachDetails.requirements.map((requirement: string) => (
+                <span key={requirement} className="bg-slate-700 text-slate-200 text-xs px-1.5 py-0.5 rounded-sm">
+                  {requirement}
+                </span>
+              ))}
+            </div>
+            <div className="text-slate-300 font-medium mt-2">Timeline:</div>
+            <div className="text-slate-200">{outreachDetails.timeline}</div>
           </div>
         );
       case 'gaps':
@@ -247,7 +401,9 @@ const TechDetails = memo(function TechDetails({
         const relevantGaps = mockGapsData[selectedTech.gapLevel as keyof typeof mockGapsData] || [];
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Identified Resiliency Gaps</div>
+            <div className="text-slate-300 font-medium flex items-center gap-2">
+              Identified Resiliency Gaps ({relevantGaps.length}) {renderGapLevel(selectedTech.gapLevel)}
+            </div>
             {relevantGaps.length > 0 ? (
               <div className="space-y-2">
                 {relevantGaps.map(gap => (
@@ -262,76 +418,39 @@ const TechDetails = memo(function TechDetails({
           </div>
         );
       case 'strategies':
-        // Show a subset of strategies for variety
-        const strategies = mockStrategiesData.slice(0, 3);
+        // Show strategies with impact contribution
+        const totalImpact = selectedTech.resiliencyImpact;
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Resiliency Strategies</div>
+            <div className="text-slate-300 font-medium">Resilience Strategies</div>
             <div className="space-y-2">
-              {strategies.map(strategy => (
-                <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
-                  <div className="font-medium text-slate-200 mb-1">{strategy.title}</div>
-                  <p className="text-slate-400">{strategy.description}</p>
-                </div>
-              ))}
+              {mockStrategiesData.map(strategy => {
+                // Calculate actual impact contribution
+                const impactContribution = (strategy.contributionPercent / 100) * totalImpact;
+                return (
+                  <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
+                    <div className="font-medium text-slate-200 mb-1 flex justify-between">
+                      <span>{strategy.title}</span>
+                      <span className="text-green-400">{strategy.contributionPercent}%</span>
+                    </div>
+                    <p className="text-slate-400 text-xs mb-2">{strategy.description}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-full bg-slate-700 rounded-full h-1.5">
+                        <div 
+                          className="bg-green-500 h-1.5 rounded-full" 
+                          style={{ width: `${strategy.contributionPercent}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-green-400">+{impactContribution.toFixed(1)}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
-      case 'analytics':
-        return (
-          <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Performance Analytics</div>
-            <div className="space-y-3">
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-400">Implementation Success Rate</span>
-                  <span className="text-slate-200">78%</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: "78%" }}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-400">ROI Timeline</span>
-                  <span className="text-slate-200">3.2 years</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-1.5">
-                  <div className="bg-green-500 h-1.5 rounded-full" style={{ width: "65%" }}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-slate-400">Maintenance Complexity</span>
-                  <span className="text-slate-200">Medium</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-1.5">
-                  <div className="bg-yellow-500 h-1.5 rounded-full" style={{ width: "45%" }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'documents':
-        return (
-          <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Related Documents</div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700">
-                <FileStack size={16} className="text-blue-400" />
-                <span className="text-slate-200">Implementation Guide</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700">
-                <FileStack size={16} className="text-green-400" />
-                <span className="text-slate-200">Technical Specifications</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-slate-800 rounded border border-slate-700">
-                <FileStack size={16} className="text-yellow-400" />
-                <span className="text-slate-200">Vendor Documentation</span>
-              </div>
-            </div>
-          </div>
-        );
+      case 'notes':
+        return renderNotesContent();
       default:
         return <div>Select a tab to view details</div>;
     }
@@ -346,12 +465,12 @@ const TechDetails = memo(function TechDetails({
             <div className="mb-3">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-slate-400">Resilience Impact:</span>
-                <span className="text-white font-semibold">{selectedTech.resiliencyImpact}/15</span>
+                <span className="text-white font-semibold">{selectedTech.resiliencyImpact.toFixed(1)}</span>
               </div>
               <div className="w-full bg-slate-700 rounded-full h-1.5">
                 <div 
                   className={`${getResiliencyColor(selectedTech.resiliencyImpact)} h-1.5 rounded-full`}
-                  style={{ width: `${(selectedTech.resiliencyImpact / 15) * 100}%` }}
+                  style={{ width: `${(selectedTech.resiliencyImpact / 8.0) * 100}%` }}
                 ></div>
               </div>
             </div>
@@ -373,7 +492,12 @@ const TechDetails = memo(function TechDetails({
         // Display technical specifications and implementation timeline
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Technical Specifications</div>
+            <div className="text-slate-300 font-medium">Technology Overview</div>
+            <div className="bg-slate-800 p-3 rounded border border-slate-700">
+              <div className="text-sm text-slate-200 mb-2">{selectedTech.technology}</div>
+              <div className="text-xs text-slate-400">{selectedTech.technologyDesc}</div>
+            </div>
+            <div className="text-slate-300 font-medium mt-2">Technical Specifications</div>
             <div className="bg-slate-800 p-3 rounded border border-slate-700">
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="text-slate-400">Avg Power Output:</div>
@@ -459,86 +583,109 @@ const TechDetails = memo(function TechDetails({
         );
       case 'gaps':
         // Display all gaps categorized by severity
+        const relevantGaps = mockGapsData[selectedTech.gapLevel as keyof typeof mockGapsData] || [];
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Gap Catalog</div>
-            <div className="space-y-2">
-              {mockGapsData.High.slice(0, 2).map(gap => (
-                <div key={gap.id} className="bg-slate-800 p-2 rounded border border-slate-700">
-                  <p className="text-slate-200">{gap.description}</p>
-                </div>
-              ))}
-              {mockGapsData.Medium.slice(0, 1).map(gap => (
-                <div key={gap.id} className="bg-slate-800 p-2 rounded border border-slate-700">
-                  <p className="text-slate-200">{gap.description}</p>
-                </div>
-              ))}
+            <div className="text-slate-300 font-medium flex items-center gap-2">
+              Identified Resiliency Gaps ({relevantGaps.length}) {renderGapLevel(selectedTech.gapLevel)}
             </div>
+            {relevantGaps.length > 0 ? (
+              <div className="space-y-2">
+                {relevantGaps.map(gap => (
+                  <div key={gap.id} className="bg-slate-800 p-2 rounded border border-slate-700">
+                    <p className="text-slate-200">{gap.description}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-slate-400 italic">No gaps identified for this technology</div>
+            )}
           </div>
         );
       case 'strategies':
-        // Show all strategies
+        // Show strategies with impact contribution
+        const totalImpact = selectedTech.resiliencyImpact;
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Available Strategies</div>
+            <div className="text-slate-300 font-medium">Resilience Strategies</div>
             <div className="space-y-2">
-              {mockStrategiesData.slice(3, 6).map(strategy => (
-                <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
-                  <div className="font-medium text-slate-200 mb-1">{strategy.title}</div>
-                  <p className="text-slate-400">{strategy.description}</p>
-                </div>
+              {mockStrategiesData.map(strategy => {
+                // Calculate actual impact contribution
+                const impactContribution = (strategy.contributionPercent / 100) * totalImpact;
+                return (
+                  <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
+                    <div className="font-medium text-slate-200 mb-1 flex justify-between">
+                      <span>{strategy.title}</span>
+                      <span className="text-green-400">{strategy.contributionPercent}%</span>
+                    </div>
+                    <p className="text-slate-400 text-xs mb-2">{strategy.description}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-full bg-slate-700 rounded-full h-1.5">
+                        <div 
+                          className="bg-green-500 h-1.5 rounded-full" 
+                          style={{ width: `${strategy.contributionPercent}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-green-400">+{impactContribution.toFixed(1)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      case 'outreach':
+        // Display outreach details
+        const outreachLevel = getOutreachLevel() as keyof typeof mockOutreachDetails;
+        const outreachDetails = mockOutreachDetails[outreachLevel];
+        return (
+          <div className="space-y-2">
+            <div className="text-slate-300 font-medium flex items-center gap-2">
+              Outreach Level: {renderOutreachBadge(outreachLevel)}
+            </div>
+            <div className="bg-slate-800 p-3 rounded border border-slate-700">
+              <div className="text-sm text-slate-200 mb-2">{outreachDetails.description}</div>
+              <div className="text-xs text-slate-400">Characteristics:</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {outreachDetails.characteristics.map((characteristic: string) => (
+                  <span key={characteristic} className="bg-slate-700 text-slate-200 text-xs px-1.5 py-0.5 rounded-sm">
+                    {characteristic}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="text-slate-300 font-medium mt-2">Requirements:</div>
+            <div className="flex flex-wrap gap-1">
+              {outreachDetails.requirements.map((requirement: string) => (
+                <span key={requirement} className="bg-slate-700 text-slate-200 text-xs px-1.5 py-0.5 rounded-sm">
+                  {requirement}
+                </span>
               ))}
             </div>
+            <div className="text-slate-300 font-medium mt-2">Timeline:</div>
+            <div className="text-slate-200">{outreachDetails.timeline}</div>
           </div>
         );
-      case 'analytics':
-        return (
-          <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Compatibility Matrix</div>
-            <div className="text-xs text-slate-400 mb-1">Compatible with other technologies:</div>
-            <div className="grid grid-cols-2 gap-1.5">
-              <div className="flex items-center gap-1 p-1.5 bg-slate-800 rounded border border-slate-700">
-                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <span className="text-slate-200 text-xs">Power Storage</span>
-              </div>
-              <div className="flex items-center gap-1 p-1.5 bg-slate-800 rounded border border-slate-700">
-                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <span className="text-slate-200 text-xs">Grid Control</span>
-              </div>
-              <div className="flex items-center gap-1 p-1.5 bg-slate-800 rounded border border-slate-700">
-                <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
-                <span className="text-slate-200 text-xs">SCADA Systems</span>
-              </div>
-              <div className="flex items-center gap-1 p-1.5 bg-slate-800 rounded border border-slate-700">
-                <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                <span className="text-slate-200 text-xs">Legacy Comm</span>
-              </div>
-            </div>
-          </div>
-        );
-      case 'documents':
-        return (
-          <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Case Studies</div>
-            <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
-              <div className="bg-slate-800 p-2 rounded border border-slate-700">
-                <div className="text-xs text-blue-400 mb-0.5">Wright-Patterson AFB</div>
-                <p className="text-slate-300 text-xs">Successfully deployed with 22% improvement in energy resilience</p>
-              </div>
-              <div className="bg-slate-800 p-2 rounded border border-slate-700">
-                <div className="text-xs text-blue-400 mb-0.5">Nellis AFB</div>
-                <p className="text-slate-300 text-xs">Pilot implementation with integrated renewable energy sources</p>
-              </div>
-              <div className="bg-slate-800 p-2 rounded border border-slate-700">
-                <div className="text-xs text-blue-400 mb-0.5">Eglin AFB</div>
-                <p className="text-slate-300 text-xs">Phase 1 deployment completed with modernized control systems</p>
-              </div>
-            </div>
-          </div>
-        );
+      case 'notes':
+        return renderNotesContent();
       default:
         return <div>Select a tab to view details</div>;
     }
+  };
+
+  // Add a function to get outreach badge with proper colors
+  const renderOutreachBadge = (level: string) => {
+    const colors = {
+      'Level 1': 'bg-purple-500 text-white',
+      'Level 2': 'bg-blue-500 text-white',
+      'Level 3': 'bg-yellow-500 text-black',
+      'Level 4': 'bg-green-500 text-white',
+    };
+    return (
+      <span className={`${colors[level as keyof typeof colors]} px-2 py-1 rounded text-xs font-medium`}>
+        {level}
+      </span>
+    );
   };
 
   return (
@@ -581,7 +728,7 @@ const TechDetails = memo(function TechDetails({
         {/* Left column tabs */}
         <div>
           <div className="flex overflow-x-auto mb-3 pb-1 scrollbar-hide">
-            {tabOptions.slice(0, 5).map(tab => (
+            {tabOptions.map(tab => (
               <button
                 key={tab.id}
                 className={`flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 rounded-md mr-1 ${
@@ -606,7 +753,7 @@ const TechDetails = memo(function TechDetails({
         {/* Right column tabs */}
         <div>
           <div className="flex overflow-x-auto mb-3 pb-1 scrollbar-hide">
-            {tabOptions.slice(0, 5).map(tab => (
+            {tabOptions.map(tab => (
               <button
                 key={tab.id}
                 className={`flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 rounded-md mr-1 ${

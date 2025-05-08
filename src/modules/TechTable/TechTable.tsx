@@ -26,8 +26,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pin, BarChart2, Search, DollarSign, TrendingUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pin, BarChart2, Search, DollarSign, TrendingUp, Zap } from 'lucide-react';
 import AnalyticsSection from '../AnalyticsSection/AnalyticsSection';
+import GoToGreenSection from '../GoToGreenSection/GoToGreenSection';
+import { DualRangeSlider } from '@/components/ui/dual-range-slider';
 
 export default function TechTable() {
   const { filters, setFilters, clearFilters } = useFilters();
@@ -39,9 +41,9 @@ export default function TechTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showGoToGreen, setShowGoToGreen] = useState(false);
   const [costRange, setCostRange] = useState<[number, number]>([0, 100]);
   const [showCostPerImpact, setShowCostPerImpact] = useState(false);
-  const [showGoToGreen, setShowGoToGreen] = useState(false);
   
   // Handle row click to view details
   const handleRowClick = (record: TechnologyRecord) => {
@@ -65,16 +67,21 @@ export default function TechTable() {
   
   // Render a cost bar with dollar value
   const renderCostBar = (cost: number) => {
-    // Convert cost percentage to dollar value (scale $1K-$100K)
-    const dollarValue = Math.round((cost / 100) * 99000) + 1000;
-    const formattedDollar = `$${(dollarValue/1000).toFixed(0)}K`;
+    // Cost is already in thousands
+    const formattedDollar = cost >= 1000 
+      ? `$${(cost/1000).toFixed(1)}M` 
+      : `$${cost}K`;
+    
+    // Scale the bar width based on max cost in data (assuming 10M max)
+    const maxCost = 10000; // 10M
+    const barWidth = Math.min((cost / maxCost) * 100, 100);
     
     return (
       <div className="flex items-center gap-2">
         <div className="w-20 bg-gray-700 rounded-full h-2.5">
           <div 
             className="bg-blue-600 h-2.5 rounded-full" 
-            style={{ width: `${cost}%` }}
+            style={{ width: `${barWidth}%` }}
           ></div>
         </div>
         <span>{formattedDollar}</span>
@@ -106,79 +113,49 @@ export default function TechTable() {
     const existingScaleWidth = existingScore;
     const impactScaleWidth = impact;
     
-    // Get appropriate color based on total value
-    const getTotalColor = (total: number) => {
-      if (total >= 80) return 'bg-green-500';
-      if (total >= 30) return 'bg-yellow-500';
-      return 'bg-red-500';
+    // Get appropriate color based on value
+    const getColorForValue = (value: number) => {
+      if (value >= 80) return 'green';
+      if (value >= 30) return 'yellow';
+      return 'red';
     };
 
-    // Get lighter version of the same color for impact
-    const getImpactColor = (total: number) => {
-      if (total >= 80) return 'bg-green-400';
-      if (total >= 30) return 'bg-yellow-400';
-      return 'bg-red-400';
-    };
+    const existingScoreColor = getColorForValue(existingScore);
+    const totalScoreColor = getColorForValue(totalScore);
     
-    const totalColor = getTotalColor(totalScore);
-    const impactColor = getImpactColor(totalScore);
+    // Map colors to CSS classes
+    const colorClasses = {
+      red: {
+        bar: 'bg-red-500',
+        text: 'text-red-500'
+      },
+      yellow: {
+        bar: 'bg-yellow-500',
+        text: 'text-yellow-500'
+      },
+      green: {
+        bar: 'bg-green-500',
+        text: 'text-green-500'
+      }
+    };
     
     return (
       <div className="flex items-center gap-2">
         <div className="w-20 bg-gray-700 rounded-full h-2.5 overflow-hidden">
-          {/* Existing score segment with color based on total */}
+          {/* Existing score segment with color based on existing score */}
           <div 
-            className={`${totalColor} h-2.5 float-left`}
+            className={`${colorClasses[existingScoreColor].bar} h-2.5 float-left`}
             style={{ width: `${existingScaleWidth}%` }}
           ></div>
-          {/* Impact segment with lighter color */}
+          {/* Impact segment with color based on total score */}
           <div 
-            className={`${impactColor} h-2.5 float-left`}
+            className={`${colorClasses[totalScoreColor].bar} h-2.5 float-left`}
             style={{ width: `${impactScaleWidth}%` }}
           ></div>
         </div>
         <div className="flex items-center">
-          <span className="text-slate-400">{existingScore}</span>
-          <span className="text-green-500 ml-1">+{impact}</span>
-        </div>
-      </div>
-    );
-  };
-  
-  // Render "Go to Green" visualization
-  const renderGoToGreenBar = (impact: number, existingScore: number) => {
-    const totalScore = existingScore + impact;
-    const targetScore = 80;
-    const gapToGreen = Math.max(0, targetScore - existingScore);
-    
-    // Determine if this impact brings the score from below 80 to above 80
-    const achievesGreen = existingScore < targetScore && totalScore >= targetScore;
-    
-    // Calculate widths as percentages
-    const gapWidthPercent = (gapToGreen / targetScore) * 100;
-    const impactWidthPercent = (impact / targetScore) * 100;
-    
-    return (
-      <div className="flex items-center gap-2">
-        <div className={`relative w-20 bg-gray-700 rounded-full h-2.5 overflow-hidden ${achievesGreen ? 'ring-2 ring-green-500' : ''}`}>
-          {/* Gap to green segment - Just show this and the impact */}
-          <div 
-            className="bg-green-300 h-2.5 float-left"
-            style={{ width: `${gapToGreen}%` }}
-          ></div>
-          {/* Impact segment */}
-          <div 
-            className="bg-green-500 h-2.5 float-left"
-            style={{ width: `${impact}%` }}
-          ></div>
-          {/* Add an additional outline/highlight effect when it reaches green threshold */}
-          {achievesGreen && (
-            <div className="absolute inset-0 border-2 border-green-500 rounded-full animate-pulse"></div>
-          )}
-        </div>
-        <div className="flex items-center">
-          <span className="text-green-300">{gapToGreen}</span>
-          <span className="text-green-500 ml-1">+{impact}</span>
+          <span className={colorClasses[existingScoreColor].text}>{existingScore}</span>
+          <span className={colorClasses[totalScoreColor].text + " ml-1"}>+{impact}</span>
         </div>
       </div>
     );
@@ -205,33 +182,25 @@ export default function TechTable() {
       return <span className="text-red-500">N/A</span>;
     }
     
-    const costPerImpact = cost / impact;
-    const formattedCostPerImpact = `$${costPerImpact.toFixed(1)}K/pt`;
+    const costPerImpact = cost / impact; // Cost per point of resiliency impact
+    const formattedCostPerImpact = costPerImpact >= 1000 
+      ? `$${(costPerImpact/1000).toFixed(1)}M/pt` 
+      : `$${costPerImpact.toFixed(0)}K/pt`;
     
-    // Define color and width based on cost efficiency
-    // Lower cost per impact is better (more efficient)
-    const getColor = (value: number) => {
-      if (value < 6) return 'bg-green-500';
-      if (value < 12) return 'bg-yellow-500';
-      return 'bg-red-500';
-    };
-    
-    // Scale width inversely - more efficient (lower value) gets wider bar
-    // Scale from 0-20, with 20 being 0% width and 0 being 100% width
-    const maxValue = 20;
-    const width = Math.max(0, Math.min(100, (1 - Math.min(costPerImpact, maxValue) / maxValue) * 100));
+    // Use the same bar visualization as regular cost to maintain consistency
+    // Scale the bar width based on max cost in data (assuming 10M max)
+    const maxCost = 10000; // 10M
+    const barWidth = Math.min((cost / maxCost) * 100, 100);
     
     return (
       <div className="flex items-center gap-2">
         <div className="w-20 bg-gray-700 rounded-full h-2.5">
           <div 
-            className={`${getColor(costPerImpact)} h-2.5 rounded-full`} 
-            style={{ width: `${width}%` }}
+            className="bg-blue-600 h-2.5 rounded-full" 
+            style={{ width: `${barWidth}%` }}
           ></div>
         </div>
-        <span className={costPerImpact < 6 ? 'text-green-500' : costPerImpact < 12 ? 'text-yellow-500' : 'text-red-500'}>
-          {formattedCostPerImpact}
-        </span>
+        <span>{formattedCostPerImpact}</span>
       </div>
     );
   };
@@ -433,45 +402,26 @@ export default function TechTable() {
       accessorFn: (row) => {
         // Get the values we need, ensure they're numbers
         const impact = Number(row.resiliencyImpact) || 0;
-        const existingScore = row.existingResiliencyScore !== undefined 
-          ? Number(row.existingResiliencyScore) 
-          : 50;
         
-        // When in "Go To Green" mode, sort by points needed to reach green
-        if (showGoToGreen) {
-          const targetScore = 80;
-          const gapToGreen = Math.max(0, targetScore - existingScore);
-          return gapToGreen;
-        }
-        
-        // In regular mode, sort by impact value
+        // Sort by impact value
         return impact;
       },
       header: ({ column }) => (
-        <div className="flex items-center">
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            {showGoToGreen ? "Go-To Green" : "Resiliency Impact"}
-            {column.getIsSorted() === "asc" ? (
-              <ChevronUp className="ml-1 h-4 w-4" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ChevronDown className="ml-1 h-4 w-4" />
-            ) : (
-              <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-                <ChevronUp className="h-2 w-4" />
-                <ChevronDown className="h-2 w-4 -mt-1" />
-              </div>
-            )}
-          </div>
-          <button 
-            onClick={toggleGoToGreenView} 
-            className={`ml-2 p-1 rounded-full hover:bg-slate-700 ${showGoToGreen ? 'bg-green-500 text-white' : 'text-slate-300'}`}
-            title={showGoToGreen ? "Show current impact" : "Show gap to reach green status"}
-          >
-            <BarChart2 size={16} />
-          </button>
+        <div
+          className="flex items-center cursor-pointer"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Resiliency Impact
+          {column.getIsSorted() === "asc" ? (
+            <ChevronUp className="ml-1 h-4 w-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <ChevronDown className="ml-1 h-4 w-4" />
+          ) : (
+            <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
+              <ChevronUp className="h-2 w-4" />
+              <ChevronDown className="h-2 w-4 -mt-1" />
+            </div>
+          )}
         </div>
       ),
       cell: ({ row }) => {
@@ -481,32 +431,12 @@ export default function TechTable() {
           ? Number(row.original.existingResiliencyScore) 
           : 50;
           
-        return showGoToGreen 
-          ? renderGoToGreenBar(impact, existingScore) 
-          : renderResiliencyStackedBar(impact, existingScore);
+        return renderResiliencyStackedBar(impact, existingScore);
       },
     },
     {
       id: "cost",
-      accessorFn: (row) => {
-        // Get the values we need, ensure they're numbers
-        const cost = Number(row.cost) || 0;
-        const impact = Number(row.resiliencyImpact) || 0;
-        
-        // When in cost per impact mode
-        if (showCostPerImpact) {
-          // Prevent division by zero
-          if (impact <= 0) {
-            return Number.MAX_VALUE; // Put at the end when sorting
-          }
-          
-          // Return cost per impact point ($ per point of resiliency)
-          return cost / impact;
-        } 
-        
-        // In regular cost mode, sort by raw cost
-        return cost;
-      },
+      accessorKey: "cost", // Use accessorKey to directly access the raw cost
       header: ({ column }) => (
         <div className="flex items-center">
           <div
@@ -535,14 +465,17 @@ export default function TechTable() {
         </div>
       ),
       cell: ({ row }) => {
+        const cost = Number(row.original.cost);
+        const impact = Number(row.original.resiliencyImpact);
+        
         if (showCostPerImpact) {
-          return renderCostPerImpactBar(Number(row.original.cost), Number(row.original.resiliencyImpact));
+          return renderCostPerImpactBar(cost, impact);
         } else {
-          return renderCostBar(Number(row.original.cost));
+          return renderCostBar(cost);
         }
       },
     },
-  ], [isInCompare, handleToggleCompare, showCostPerImpact, showGoToGreen]);
+  ], [isInCompare, handleToggleCompare, showCostPerImpact]);
   
   // Create filter mapping from context filters to column filters
   useMemo(() => {
@@ -576,11 +509,16 @@ export default function TechTable() {
       });
     }
     
-    // Add cost range filter
+    // Add cost range filter using correct filter type
     if (costRange[0] > 0 || costRange[1] < 100) {
+      // Transform percentage range to actual cost range
+      const maxCost = 10000; // 10M in K
+      const minCostValue = (costRange[0] / 100) * maxCost;
+      const maxCostValue = (costRange[1] / 100) * maxCost;
+      
       newColumnFilters.push({
         id: 'cost',
-        value: costRange,
+        value: [minCostValue, maxCostValue]
       });
     }
     
@@ -601,13 +539,40 @@ export default function TechTable() {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnFiltersChange: setColumnFilters,
     enableMultiSort: true,
-    filterFns: {
-      costRange: (row, id, value: [number, number]) => {
-        const cost = row.getValue(id) as number;
-        return cost >= value[0] && cost <= value[1];
-      },
-    },
   });
+
+  // Get available filter options based on current filtered data
+  const getAvailableFilterOptions = () => {
+    // Get the current filtered data from the table
+    const currentFilteredData = table.getFilteredRowModel().rows.map(row => row.original);
+    
+    // Extract unique values for each filter type
+    const availableOptions = {
+      statuses: [...new Set(currentFilteredData.map(item => {
+        // Use outreachLevel if available, otherwise map from status
+        if (item.outreachLevel) {
+          return item.outreachLevel;
+        }
+        
+        // Fallback mapping from old status values
+        const statusToOutreach = {
+          'Prototype': 'Level 1',
+          'Planning': 'Level 2',
+          'Deployment': 'Level 4',
+        };
+        return statusToOutreach[item.status as keyof typeof statusToOutreach] || 'Level 3';
+      }))],
+      installations: [...new Set(currentFilteredData.map(item => item.installation))],
+      vendors: [...new Set(currentFilteredData.map(item => item.vendor))],
+      technologies: [...new Set(currentFilteredData.map(item => item.technology))],
+      techNeeds: [...new Set(currentFilteredData.flatMap(item => item.techNeeds))]
+    };
+    
+    return availableOptions;
+  };
+  
+  // Get the current available filter options based on filtered data
+  const availableFilterOptions = getAvailableFilterOptions();
 
   // Enhanced filter component for each column with search
   const FilterSelect = ({ 
@@ -626,6 +591,33 @@ export default function TechTable() {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: '0px', left: '0px' });
     
+    // Get available options - include selected values even if they're filtered out
+    const availableOptions = useMemo(() => {
+      let baseOptions: string[] = [];
+      
+      // Get options from the filtered data
+      switch(column) {
+        case 'status':
+          baseOptions = availableFilterOptions.statuses;
+          break;
+        case 'installation':
+          baseOptions = availableFilterOptions.installations;
+          break;
+        case 'vendor':
+          baseOptions = availableFilterOptions.vendors;
+          break;
+        case 'technologyType':
+          baseOptions = availableFilterOptions.technologies;
+          break;
+        default:
+          baseOptions = options;
+      }
+      
+      // Include any currently selected values that might not be in the filtered data
+      const combined = [...new Set([...baseOptions, ...selectedValues])];
+      return combined;
+    }, [column, selectedValues, availableFilterOptions, options]);
+
     const handleToggle = () => {
       if (!isOpen) {
         updatePosition();
@@ -661,10 +653,26 @@ export default function TechTable() {
       };
     }, [isOpen]);
 
-    // Filter options based on search term
-    const filteredOptions = options.filter(option => 
+    // Filter options based on search term against available options
+    const filteredOptions = availableOptions.filter(option => 
       option.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    // Check if an option actually exists in the filtered data
+    const isOptionAvailableInFiltered = (option: string) => {
+      switch(column) {
+        case 'status':
+          return availableFilterOptions.statuses.includes(option);
+        case 'installation':
+          return availableFilterOptions.installations.includes(option);
+        case 'vendor':
+          return availableFilterOptions.vendors.includes(option);
+        case 'technologyType':
+          return availableFilterOptions.technologies.includes(option);
+        default:
+          return true;
+      }
+    };
     
     const handleFilterSelect = (value: string) => {
       setFilters(prev => {
@@ -712,6 +720,14 @@ export default function TechTable() {
     
     const hasActiveFilters = selectedValues.length > 0;
     
+    // Get the counts of different types of options
+    const counts = useMemo(() => {
+      const availableCount = filteredOptions.filter(option => isOptionAvailableInFiltered(option)).length;
+      const selectedCount = selectedValues.length;
+      
+      return { availableCount, selectedCount };
+    }, [filteredOptions, selectedValues, isOptionAvailableInFiltered]);
+    
     return (
       <div className="relative">
         <button
@@ -756,20 +772,28 @@ export default function TechTable() {
               {filteredOptions.length > 0 ? (
                 filteredOptions.map(option => (
                   <div key={option} className="flex items-center py-1">
-                    <label className="flex items-center cursor-pointer w-full text-sm">
+                    <label className={`flex items-center cursor-pointer w-full text-sm ${!isOptionAvailableInFiltered(option) && !selectedValues.includes(option) ? 'hidden' : ''}`}>
                       <input
                         type="checkbox"
                         checked={selectedValues.includes(option)}
                         onChange={() => handleFilterSelect(option)}
                         className="mr-2"
                       />
-                      <span className="truncate">{option}</span>
+                      <span className={`truncate ${!isOptionAvailableInFiltered(option) ? 'text-slate-500' : ''}`}>
+                        {option}
+                      </span>
+                      {!isOptionAvailableInFiltered(option) && selectedValues.includes(option) && (
+                        <span className="ml-2 text-xs text-gray-400">(no matches)</span>
+                      )}
                     </label>
                   </div>
                 ))
               ) : (
                 <div className="py-2 text-sm text-slate-400 text-center">No matching options</div>
               )}
+            </div>
+            <div className="mt-2 text-xs text-slate-400 text-center">
+              Showing {counts.availableCount} available options {selectedValues.length > 0 ? `(${selectedValues.length} selected)` : ''}
             </div>
             {selectedValues.length > 0 && (
               <button
@@ -787,11 +811,27 @@ export default function TechTable() {
 
   // Cost range filter component
   const CostRangeFilter = () => {
-    const [localCostRange, setLocalCostRange] = useState(costRange);
+    const [localCostRange, setLocalCostRange] = useState<[number, number]>(costRange);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: '0px', left: '0px' });
+
+    // Convert cost to dollar value for range filter
+    const toDollarValue = (percentage: number) => {
+      // Round to 2 decimal places to avoid floating point issues
+      const maxCost = 10000; // 10M
+      const cost = Math.round((percentage / 100) * maxCost * 100) / 100;
+      
+      // Apply different formatting based on value range
+      if (cost >= 1000) {
+        // For values in millions, format with one decimal place
+        return `$${(cost/1000).toFixed(1)}M`;
+      } else {
+        // For values in thousands, use whole numbers only
+        return `$${Math.round(cost)}K`;
+      }
+    };
 
     // Update dropdown position
     const updatePosition = () => {
@@ -829,11 +869,6 @@ export default function TechTable() {
       };
     }, [isOpen]);
 
-    // Convert cost percentage to dollar value (scale $1K-$100K)
-    const toDollarValue = (percentage: number) => {
-      return `$${Math.round((percentage / 100) * 99000 + 1000) / 1000}K`;
-    };
-
     // Format the current range for display
     const formatRangeDisplay = () => {
       return `${toDollarValue(localCostRange[0])} - ${toDollarValue(localCostRange[1])}`;
@@ -870,6 +905,22 @@ export default function TechTable() {
     };
 
     const hasActiveFilter = costRange[0] > 0 || costRange[1] < 100;
+    
+    // Custom label for the slider that shows dollar values
+    const dollarValueLabel = (value: number | undefined) => {
+      if (value === undefined) return null;
+      return (
+        <span className="text-xs font-medium bg-slate-800 text-white px-2 py-1 rounded">
+          {toDollarValue(value)}
+        </span>
+      );
+    };
+    
+    // Handle value change from dual range slider
+    const handleValueChange = (newValues: number[]) => {
+      // Convert number[] to [number, number] tuple for our state
+      setLocalCostRange([newValues[0], newValues[1]]);
+    };
 
     return (
       <div className="relative">
@@ -901,52 +952,23 @@ export default function TechTable() {
               left: dropdownPosition.left
             }}
           >
-            <div className="mb-3">
-              <div className="flex justify-between mb-1 text-sm text-slate-300">
-                <span>{toDollarValue(localCostRange[0])}</span>
-                <span>{toDollarValue(localCostRange[1])}</span>
-              </div>
-              <div className="relative w-full h-2 bg-slate-700 rounded-full">
-                <div
-                  className="absolute top-0 h-2 bg-blue-500 rounded-full"
-                  style={{
-                    left: `${localCostRange[0]}%`,
-                    width: `${localCostRange[1] - localCostRange[0]}%`
-                  }}
-                ></div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={localCostRange[0]}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (value < localCostRange[1]) {
-                      setLocalCostRange([value, localCostRange[1]]);
-                    }
-                  }}
-                  className="absolute top-0 w-full h-2 appearance-none bg-transparent pointer-events-auto"
-                  style={{ zIndex: 2 }}
-                />
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={localCostRange[1]}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (value > localCostRange[0]) {
-                      setLocalCostRange([localCostRange[0], value]);
-                    }
-                  }}
-                  className="absolute top-0 w-full h-2 appearance-none bg-transparent pointer-events-auto"
-                  style={{ zIndex: 2 }}
-                />
-              </div>
+            <div className="mb-3 pt-4">
+              <DualRangeSlider
+                value={localCostRange}
+                onValueChange={handleValueChange}
+                min={0}
+                max={100}
+                step={1}
+                label={dollarValueLabel}
+                labelPosition="top"
+                className="mt-6"
+              />
             </div>
-            <div className="text-center text-sm mb-3 text-slate-300">
+            
+            <div className="text-center text-sm mb-3 text-slate-300 mt-8">
               Current: {formatRangeDisplay()}
             </div>
+            
             <div className="flex gap-2">
               <button
                 onClick={applyFilter}
@@ -967,52 +989,10 @@ export default function TechTable() {
     );
   };
 
-  // Handle cost toggle view change
+  // Handle cost toggle view change - simplified to only toggle display
   const toggleCostPerImpactView = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    // First toggle the view state
     setShowCostPerImpact(prev => !prev);
-    
-    // Force resort if currently sorting by cost
-    if (table.getState().sorting.some(sort => sort.id === "cost")) {
-      // Get current sorting direction for cost
-      const costSortConfig = table.getState().sorting.find(sort => sort.id === "cost");
-      const isDesc = costSortConfig?.desc ?? false; // Default to false if undefined
-      
-      // First, completely remove cost sorting to reset
-      const otherSortings = table.getState().sorting.filter(sort => sort.id !== "cost");
-      setSorting(otherSortings);
-      
-      // In the next tick, reapply the cost sorting with same direction
-      setTimeout(() => {
-        setSorting([...otherSortings, { id: "cost", desc: isDesc }]);
-      }, 0);
-    }
-  };
-  
-  // Handle resiliency impact toggle view change
-  const toggleGoToGreenView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // First toggle the view state
-    setShowGoToGreen(prev => !prev);
-    
-    // Force resort if currently sorting by resiliency impact
-    if (table.getState().sorting.some(sort => sort.id === "resiliencyImpact")) {
-      // Get current sorting direction for resiliency
-      const resiliencySortConfig = table.getState().sorting.find(sort => sort.id === "resiliencyImpact");
-      const isDesc = resiliencySortConfig?.desc ?? false; // Default to false if undefined
-      
-      // First, completely remove resiliency sorting to reset
-      const otherSortings = table.getState().sorting.filter(sort => sort.id !== "resiliencyImpact");
-      setSorting(otherSortings);
-      
-      // In the next tick, reapply the resiliency sorting with same direction
-      setTimeout(() => {
-        setSorting([...otherSortings, { id: "resiliencyImpact", desc: isDesc }]);
-      }, 0);
-    }
   };
 
   return (
@@ -1074,11 +1054,25 @@ export default function TechTable() {
               <CostRangeFilter />
               
               <button
-                onClick={() => setShowAnalytics(!showAnalytics)}
+                onClick={() => {
+                  setShowAnalytics(!showAnalytics);
+                  if (showGoToGreen) setShowGoToGreen(false);
+                }}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm ${showAnalytics ? 'bg-blue-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-200'}`}
               >
                 <BarChart2 size={16} />
                 <span>{showAnalytics ? 'Hide Analytics' : 'Show Analytics'}</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowGoToGreen(!showGoToGreen);
+                  if (showAnalytics) setShowAnalytics(false);
+                }}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm ${showGoToGreen ? 'bg-green-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-200'}`}
+              >
+                <Zap size={16} />
+                <span>{showGoToGreen ? 'Hide Go-To-Green' : 'Show Go-To-Green'}</span>
               </button>
             </div>
             
@@ -1108,6 +1102,11 @@ export default function TechTable() {
           {/* Analytics section */}
           <AnimatePresence>
             {showAnalytics && <AnalyticsSection />}
+          </AnimatePresence>
+          
+          {/* Go To Green section */}
+          <AnimatePresence>
+            {showGoToGreen && <GoToGreenSection />}
           </AnimatePresence>
           
           <div className="overflow-x-auto border-x border-slate-700 scrollbar-hide">

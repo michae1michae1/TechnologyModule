@@ -84,12 +84,12 @@ export default function CompareSection() {
                         <div>
                           <div className="flex justify-between items-center">
                             <span className="text-xs text-slate-400">Cost</span>
-                            <span className="text-xs text-slate-400">{item.record.cost}%</span>
+                            <span className="text-xs text-slate-400">${item.record.cost >= 1000 ? `${(item.record.cost/1000).toFixed(1)}M` : `${item.record.cost}K`}</span>
                           </div>
                           <div className="w-full bg-slate-700 rounded-full h-2 mt-1">
                             <div 
                               className="bg-blue-600 h-2 rounded-full"
-                              style={{ width: `${item.record.cost}%` }}
+                              style={{ width: `${Math.min((item.record.cost / 10000) * 100, 100)}%` }}
                             ></div>
                           </div>
                         </div>
@@ -107,12 +107,12 @@ export default function CompareSection() {
                         <div>
                           <div className="flex justify-between items-center">
                             <span className="text-xs text-slate-400">Resiliency</span>
-                            <span className="text-xs text-white">{item.record.resiliencyImpact}/15</span>
+                            <span className="text-xs text-white">{item.record.resiliencyImpact.toFixed(1)}</span>
                           </div>
                           <div className="w-full bg-slate-700 rounded-full h-2 mt-1">
                             <div 
                               className={getResiliencyColor(item.record.resiliencyImpact)}
-                              style={{ width: `${(item.record.resiliencyImpact / 15) * 100}%` }}
+                              style={{ width: `${Math.min((item.record.resiliencyImpact / 10) * 100, 100)}%` }}
                             ></div>
                           </div>
                         </div>
@@ -180,8 +180,8 @@ function GapBadge({ level }: { level: 'High' | 'Medium' | 'Low' }) {
 }
 
 function getResiliencyColor(value: number) {
-  // Scale is 1-15 according to the specs
-  if (value > 10) return 'bg-green-500 h-2 rounded-full';
-  if (value > 5) return 'bg-yellow-500 h-2 rounded-full';
+  // Scale is now 0-10 for resiliency impact
+  if (value >= 6) return 'bg-green-500 h-2 rounded-full';
+  if (value >= 3) return 'bg-yellow-500 h-2 rounded-full';
   return 'bg-red-500 h-2 rounded-full';
 }

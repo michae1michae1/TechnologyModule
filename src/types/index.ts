@@ -1,10 +1,12 @@
 export interface TechnologyRecord {
   id: string;
   technology: string;
+  technologyDesc: string;
   status: 'Prototype' | 'Planning' | 'Deployment';
   outreachLevel?: 'Level 1' | 'Level 2' | 'Level 3' | 'Level 4';
   cost: number;
   vendor: string;
+  vendorDesc: string;
   installation: string;
   techNeeds: string[];
   gapLevel: 'High' | 'Medium' | 'Low';

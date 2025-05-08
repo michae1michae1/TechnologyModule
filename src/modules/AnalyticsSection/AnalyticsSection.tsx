@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTechnologyData } from '@/hooks/useTechnologyData';
 import { useFilters } from '@/context/FilterContext';
 import { useCompare } from '@/context/CompareContext';
+import { TechnologyRecord } from '@/types';
 import { motion } from 'framer-motion';
 import {
   Chart as ChartJS,
@@ -59,23 +60,26 @@ const enrichTechnologyData = (records: any[]): ExtendedTechnologyRecord[] => {
     const riskBase = record.gapLevel === 'High' ? 70 : record.gapLevel === 'Medium' ? 50 : 30;
     const risk = Math.min(100, Math.max(0, riskBase + (Math.random() * 20 - 10)));
     
-    const costEfficiencyBase = 100 - record.cost; // Inverse of cost
+    // Cost efficiency based on actual cost (in thousands) - higher efficiency for lower cost
+    const scaledCost = Math.min(record.cost, 10000); // Cap at 10M
+    const costEfficiencyBase = 100 - ((scaledCost / 10000) * 100); // Inverse of scaled cost
     const costEfficiency = Math.min(100, Math.max(0, costEfficiencyBase + (Math.random() * 15 - 7.5)));
     
     const timeToDevelopBase = record.status === 'Deployment' ? 80 : record.status === 'Planning' ? 50 : 30;
     const timeToDevelop = Math.min(100, Math.max(0, timeToDevelopBase + (Math.random() * 20 - 10)));
     
-    const resiliencyImpactPotential = Math.min(100, Math.max(0, record.resiliencyImpact * 7 + (Math.random() * 10 - 5)));
+    // Scale resiliency impact from 0-10 to 0-100
+    const resiliencyImpactPotential = Math.min(100, Math.max(0, (record.resiliencyImpact / 10) * 100 + (Math.random() * 10 - 5)));
     
     const criticalGapsAddressedBase = record.gapLevel === 'High' ? 80 : record.gapLevel === 'Medium' ? 60 : 40;
     const criticalGapsAddressed = Math.min(100, Math.max(0, criticalGapsAddressedBase + (Math.random() * 20 - 10)));
     
-    // Financial data
-    const capexBase = (record.cost / 20) + 0.5; // Scale cost to $M
-    const capex = parseFloat((capexBase + (Math.random() * 1 - 0.5)).toFixed(2));
+    // Financial data - scale cost in thousands to millions
+    const capexBase = record.cost / 1000; // Convert K to M
+    const capex = parseFloat((capexBase + (Math.random() * 0.2 - 0.1)).toFixed(2));
     
-    const opexBase = (record.cost / 100) + 0.1; // Scale to $M/yr
-    const opex = parseFloat((opexBase + (Math.random() * 0.2 - 0.1)).toFixed(2));
+    const opexBase = record.cost / 5000; // 20% of capex annually
+    const opex = parseFloat((opexBase + (Math.random() * 0.1 - 0.05)).toFixed(2));
     
     // NPV calculation (simplified)
     const npvBase = capexBase * 1.5 - opexBase * 5;
@@ -244,16 +248,32 @@ const FinancialDetails = ({ data }: { data: ExtendedTechnologyRecord[] }) => {
       <div className="mt-4">
         <h4 className="text-sm font-medium mb-2">Projects by Investment Size</h4>
         <div className="w-full bg-slate-700 rounded-lg h-10 flex overflow-hidden">
-          <div className="bg-green-600 h-full" style={{ width: `${(data.filter(i => i.capex < 1).length / data.length) * 100}%` }}></div>
-          <div className="bg-blue-600 h-full" style={{ width: `${(data.filter(i => i.capex >= 1 && i.capex < 5).length / data.length) * 100}%` }}></div>
-          <div className="bg-yellow-600 h-full" style={{ width: `${(data.filter(i => i.capex >= 5 && i.capex < 10).length / data.length) * 100}%` }}></div>
-          <div className="bg-red-600 h-full" style={{ width: `${(data.filter(i => i.capex >= 10).length / data.length) * 100}%` }}></div>
+          <div 
+            className="bg-green-600 h-full" 
+            style={{ width: `${(data.filter(i => i.cost < 2000).length / data.length) * 100}%` }}
+            title="Under $2M"
+          ></div>
+          <div 
+            className="bg-blue-600 h-full" 
+            style={{ width: `${(data.filter(i => i.cost >= 2000 && i.cost < 5000).length / data.length) * 100}%` }}
+            title="$2M - $5M"
+          ></div>
+          <div 
+            className="bg-yellow-600 h-full" 
+            style={{ width: `${(data.filter(i => i.cost >= 5000 && i.cost < 8000).length / data.length) * 100}%` }}
+            title="$5M - $8M"
+          ></div>
+          <div 
+            className="bg-red-600 h-full" 
+            style={{ width: `${(data.filter(i => i.cost >= 8000).length / data.length) * 100}%` }}
+            title="Over $8M"
+          ></div>
         </div>
-        <div className="flex text-xs mt-1 justify-between text-slate-400">
-          <span>Under $1M</span>
-          <span>$1M-$5M</span>
-          <span>$5M-$10M</span>
-          <span>$10M+</span>
+        <div className="flex justify-between text-xs text-slate-400 mt-1">
+          <span>&lt; $2M</span>
+          <span>$2-5M</span>
+          <span>$5-8M</span>
+          <span>&gt; $8M</span>
         </div>
       </div>
     </div>
@@ -331,23 +351,29 @@ const TechnologyEvaluation = ({ data }: { data: ExtendedTechnologyRecord[] }) =>
 };
 
 export default function AnalyticsSection() {
-  const { compareItems } = useCompare();
   const { filters } = useFilters();
   const { allRecords } = useTechnologyData(filters);
+  const { compareItems } = useCompare();
   
-  // Get full technology records for the compare items
-  const pinnedRecords = React.useMemo(() => {
-    return compareItems.map(item => {
-      const record = allRecords.find(r => r.id === item.id);
-      return record;
-    }).filter(Boolean); // Filter out any items that don't have a corresponding record
-  }, [compareItems, allRecords]);
+  // Filter records based on the compareItems 
+  const compareRecords = useMemo(() => {
+    if (compareItems.length === 0) {
+      // Return a subset of all records if no items are pinned
+      return allRecords.slice(0, Math.min(5, allRecords.length));
+    }
+    
+    return compareItems
+      .map(item => allRecords.find(record => record.id === item.id))
+      .filter(Boolean) as TechnologyRecord[];
+  }, [allRecords, compareItems]);
   
-  // Enrich data with analytics properties
-  const enrichedData = enrichTechnologyData(pinnedRecords);
+  // Enrich data with analytics fields
+  const enrichedData = useMemo(() => {
+    return enrichTechnologyData(compareRecords);
+  }, [compareRecords]);
   
   // If no items are pinned, show the empty state
-  if (pinnedRecords.length === 0) {
+  if (compareRecords.length === 0) {
     return (
       <motion.div 
         initial={{ opacity: 0, height: 0 }}
