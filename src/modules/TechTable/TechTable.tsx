@@ -585,11 +585,17 @@ export default function TechTable() {
     options: string[] 
   }) => {
     const selectedValues = filters[column as keyof typeof filters] || [];
+    const [localSelectedValues, setLocalSelectedValues] = useState<string[]>(selectedValues);
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: '0px', left: '0px' });
+    
+    // Sync local values with global filter state
+    useEffect(() => {
+      setLocalSelectedValues(selectedValues);
+    }, [selectedValues]);
     
     // Get available options - include selected values even if they're filtered out
     const availableOptions = useMemo(() => {
@@ -614,9 +620,9 @@ export default function TechTable() {
       }
       
       // Include any currently selected values that might not be in the filtered data
-      const combined = [...new Set([...baseOptions, ...selectedValues])];
+      const combined = [...new Set([...baseOptions, ...localSelectedValues])];
       return combined;
-    }, [column, selectedValues, availableFilterOptions, options]);
+    }, [column, localSelectedValues, availableFilterOptions, options]);
 
     const handleToggle = () => {
       if (!isOpen) {
@@ -674,29 +680,52 @@ export default function TechTable() {
       }
     };
     
-    const handleFilterSelect = (value: string) => {
-      setFilters(prev => {
-        if (prev[column as keyof typeof prev].includes(value)) {
-          return {
-            ...prev,
-            [column]: prev[column as keyof typeof prev].filter(item => item !== value)
-          };
+    // Handle toggling an option in the local state
+    const handleLocalFilterSelect = (value: string) => {
+      setLocalSelectedValues(prev => {
+        if (prev.includes(value)) {
+          return prev.filter(item => item !== value);
         } else {
-          return {
-            ...prev,
-            [column]: [...prev[column as keyof typeof prev], value]
-          };
+          return [...prev, value];
         }
       });
+    };
+    
+    // Apply the local selections to the global filter
+    const applyFilters = () => {
+      setFilters(prev => ({
+        ...prev,
+        [column]: localSelectedValues
+      }));
+      setIsOpen(false);
+    };
+    
+    // Cancel and revert to previous state
+    const cancelSelection = () => {
+      setLocalSelectedValues(selectedValues);
+      setIsOpen(false);
+    };
+    
+    // Select all available options
+    const selectAll = () => {
+      const availableFiltered = filteredOptions.filter(option => isOptionAvailableInFiltered(option));
+      setLocalSelectedValues(availableFiltered);
+    };
+    
+    // Clear all selections
+    const clearAllSelections = () => {
+      setLocalSelectedValues([]);
     };
 
     // Clear this specific filter
     const clearThisFilter = () => {
+      setLocalSelectedValues([]);
       setFilters(prev => ({
         ...prev,
         [column]: []
       }));
       setSearchTerm('');
+      setIsOpen(false);
     };
 
     // Close dropdown when clicking outside
@@ -708,7 +737,7 @@ export default function TechTable() {
           dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
           buttonRef.current && !buttonRef.current.contains(event.target as Node)
         ) {
-          setIsOpen(false);
+          cancelSelection();
         }
       };
       
@@ -716,17 +745,18 @@ export default function TechTable() {
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
-    }, [isOpen]);
+    }, [isOpen, selectedValues]);
     
     const hasActiveFilters = selectedValues.length > 0;
+    const hasLocalChanges = JSON.stringify(localSelectedValues) !== JSON.stringify(selectedValues);
     
     // Get the counts of different types of options
     const counts = useMemo(() => {
       const availableCount = filteredOptions.filter(option => isOptionAvailableInFiltered(option)).length;
-      const selectedCount = selectedValues.length;
+      const selectedCount = localSelectedValues.length;
       
       return { availableCount, selectedCount };
-    }, [filteredOptions, selectedValues, isOptionAvailableInFiltered]);
+    }, [filteredOptions, localSelectedValues, isOptionAvailableInFiltered]);
     
     return (
       <div className="relative">
@@ -758,6 +788,21 @@ export default function TechTable() {
               left: dropdownPosition.left
             }}
           >
+            <div className="flex justify-between mb-2 pb-2 border-b border-slate-700">
+              <button 
+                className="text-xs text-blue-400 hover:text-blue-300"
+                onClick={selectAll}
+              >
+                Select All
+              </button>
+              <button 
+                className="text-xs text-red-400 hover:text-red-300"
+                onClick={clearAllSelections}
+              >
+                Clear All
+              </button>
+            </div>
+            
             <div className="relative mb-2">
               <input
                 type="text"
@@ -772,17 +817,17 @@ export default function TechTable() {
               {filteredOptions.length > 0 ? (
                 filteredOptions.map(option => (
                   <div key={option} className="flex items-center py-1">
-                    <label className={`flex items-center cursor-pointer w-full text-sm ${!isOptionAvailableInFiltered(option) && !selectedValues.includes(option) ? 'hidden' : ''}`}>
+                    <label className={`flex items-center cursor-pointer w-full text-sm ${!isOptionAvailableInFiltered(option) && !localSelectedValues.includes(option) ? 'hidden' : ''}`}>
                       <input
                         type="checkbox"
-                        checked={selectedValues.includes(option)}
-                        onChange={() => handleFilterSelect(option)}
+                        checked={localSelectedValues.includes(option)}
+                        onChange={() => handleLocalFilterSelect(option)}
                         className="mr-2"
                       />
                       <span className={`truncate ${!isOptionAvailableInFiltered(option) ? 'text-slate-500' : ''}`}>
                         {option}
                       </span>
-                      {!isOptionAvailableInFiltered(option) && selectedValues.includes(option) && (
+                      {!isOptionAvailableInFiltered(option) && localSelectedValues.includes(option) && (
                         <span className="ml-2 text-xs text-gray-400">(no matches)</span>
                       )}
                     </label>
@@ -793,15 +838,33 @@ export default function TechTable() {
               )}
             </div>
             <div className="mt-2 text-xs text-slate-400 text-center">
-              Showing {counts.availableCount} available options {selectedValues.length > 0 ? `(${selectedValues.length} selected)` : ''}
+              Showing {counts.availableCount} available options {counts.selectedCount > 0 ? `(${counts.selectedCount} selected)` : ''}
             </div>
-            {selectedValues.length > 0 && (
+            
+            <div className="mt-2 pt-2 border-t border-slate-700 flex justify-end gap-2">
               <button
-                onClick={clearThisFilter}
-                className="mt-2 w-full text-xs py-1 bg-slate-700 hover:bg-slate-600 text-white rounded"
+                onClick={cancelSelection}
+                className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded"
               >
-                Clear {title} Filter
+                Cancel
               </button>
+              <button
+                onClick={applyFilters}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+              >
+                Apply
+              </button>
+            </div>
+            
+            {selectedValues.length > 0 && (
+              <div className="mt-2">
+                <button
+                  onClick={clearThisFilter}
+                  className="w-full text-xs py-1 bg-slate-700 hover:bg-slate-600 text-white rounded"
+                >
+                  Clear {title} Filter
+                </button>
+              </div>
             )}
           </div>
         )}
