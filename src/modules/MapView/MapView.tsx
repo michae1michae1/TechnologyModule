@@ -4,10 +4,11 @@ import React, { useState, useCallback, useMemo, memo } from 'react';
 import { useTechnologyData } from '@/hooks/useTechnologyData';
 import { useFilters } from '@/context/FilterContext';
 import { useDetails } from '@/context/DetailsContext';
+import { useOnboarding } from '@/context/OnboardingContext';
 import { TechnologyRecord } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WorldMap } from '@/components/ui/world-map';
-import { ChevronDown, ChevronUp, MapIcon, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapIcon, Loader2, HelpCircle } from 'lucide-react';
 
 // Memoized marker component to prevent excessive re-renders
 const InstallationMarker = memo(function InstallationMarker({
@@ -124,6 +125,7 @@ export default function MapView() {
   const { filters, setFilters } = useFilters();
   const { allRecords } = useTechnologyData(filters);
   const { setSelectedTech, openDetails } = useDetails();
+  const { openOnboarding } = useOnboarding();
   const [hoveredInstallation, setHoveredInstallation] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 });
   const [isMapVisible, setIsMapVisible] = useState(true);
@@ -253,6 +255,11 @@ export default function MapView() {
     }
   };
 
+  // Handle help button click
+  const handleHelpClick = () => {
+    openOnboarding();
+  };
+
   return (
     <div className="w-full p-4 relative bg-slate-950">
       <div className="flex justify-between items-center mb-2">
@@ -268,33 +275,44 @@ export default function MapView() {
           )}
         </div>
         
-        {/* Toggle button */}
-        <button
-          onClick={handleToggleMap}
-          disabled={isLoading}
-          className={`flex items-center gap-1 text-sm ${
-            isLoading 
-              ? 'bg-slate-700 text-slate-400 cursor-not-allowed' 
-              : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-          } px-3 py-1.5 rounded-md transition-colors duration-200`}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              <span>Loading...</span>
-            </>
-          ) : isMapVisible ? (
-            <>
-              <ChevronUp size={16} />
-              <span>Hide Map</span>
-            </>
-          ) : (
-            <>
-              <ChevronDown size={16} />
-              <span>Show Map</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Help Button */}
+          <button
+            onClick={handleHelpClick}
+            className="flex items-center gap-1 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md transition-colors duration-200"
+          >
+            <HelpCircle size={16} />
+            <span>Guide</span>
+          </button>
+          
+          {/* Toggle button */}
+          <button
+            onClick={handleToggleMap}
+            disabled={isLoading}
+            className={`flex items-center gap-1 text-sm ${
+              isLoading 
+                ? 'bg-slate-700 text-slate-400 cursor-not-allowed' 
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+            } px-3 py-1.5 rounded-md transition-colors duration-200`}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : isMapVisible ? (
+              <>
+                <ChevronUp size={16} />
+                <span>Hide Map</span>
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} />
+                <span>Show Map</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
       
       <AnimatePresence>

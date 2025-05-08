@@ -5,6 +5,7 @@ import { FilterProvider } from '../context/FilterContext';
 import { CompareProvider } from '../context/CompareContext'; 
 import { DetailsProvider } from '../context/DetailsContext';
 import { ThemeProvider } from '../context/ThemeProvider';
+import { OnboardingProvider } from '../context/OnboardingContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,7 +26,9 @@ export default function RootLayout({
           <FilterProvider>
             <CompareProvider>
               <DetailsProvider>
-                {children}
+                <OnboardingProvider>
+                  {children}
+                </OnboardingProvider>
               </DetailsProvider>
             </CompareProvider>
           </FilterProvider>

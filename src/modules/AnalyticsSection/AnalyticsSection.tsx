@@ -16,6 +16,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
+import { Pin } from 'lucide-react';
 
 // Register Chart.js components
 ChartJS.register(
@@ -115,17 +116,31 @@ const enrichTechnologyData = (records: any[]): ExtendedTechnologyRecord[] => {
 // Empty State Component for when no items are pinned
 const EmptyAnalyticsState = () => {
   return (
-    <div className="w-full flex flex-col items-center justify-center py-16 text-center">
-      <div className="bg-slate-800 p-6 rounded-lg max-w-md shadow-lg border border-slate-700">
-        <h3 className="text-xl font-bold text-white mb-2">No Items to Analyze</h3>
-        <p className="text-slate-400 mb-4">
-          Please pin items to the comparison to see analytics. You can pin up to 3 items by clicking the pin icon in the table.
+    <div className="w-full flex flex-col items-center justify-center py-8 text-center">
+      <div className="bg-slate-800 p-5 rounded-lg max-w-2xl shadow-lg border border-slate-700">
+        <h3 className="text-xl font-bold text-white mb-2">Analytics Requires Pinned Items</h3>
+        <p className="text-slate-400 mb-3">
+          To view analytics, please pin technology items using the <span className="inline-flex items-center text-yellow-500"><Pin size={14} className="mr-1 rotate-45" fill="currentColor" /> pin icon</span> in the table.
         </p>
+        <div className="bg-slate-900 p-3 rounded border border-slate-700 mb-3">
+          <ol className="text-left text-sm text-slate-400 space-y-1.5">
+            <li className="flex items-start">
+              <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2 mt-0.5">1</span>
+              <span>Find technologies you want to analyze in the table</span>
+            </li>
+            <li className="flex items-start">
+              <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2 mt-0.5">2</span>
+              <span>Click the pin icon <span className="inline-flex items-center text-yellow-500"><Pin size={14} className="mx-1 rotate-45" fill="currentColor" /></span> on those rows</span>
+            </li>
+            <li className="flex items-start">
+              <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mr-2 mt-0.5">3</span>
+              <span>Return to this analytics view to see comparison data</span>
+            </li>
+          </ol>
+        </div>
         <div className="animate-pulse flex justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
-            <line x1="12" y1="17" x2="12" y2="17.01" />
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="14" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+            <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path>
           </svg>
         </div>
       </div>
@@ -357,11 +372,7 @@ export default function AnalyticsSection() {
   
   // Filter records based on the compareItems 
   const compareRecords = useMemo(() => {
-    if (compareItems.length === 0) {
-      // Return a subset of all records if no items are pinned
-      return allRecords.slice(0, Math.min(5, allRecords.length));
-    }
-    
+    // Only use pinned items, don't fallback to allRecords
     return compareItems
       .map(item => allRecords.find(record => record.id === item.id))
       .filter(Boolean) as TechnologyRecord[];
@@ -373,7 +384,7 @@ export default function AnalyticsSection() {
   }, [compareRecords]);
   
   // If no items are pinned, show the empty state
-  if (compareRecords.length === 0) {
+  if (compareItems.length === 0) {
     return (
       <motion.div 
         initial={{ opacity: 0, height: 0 }}
