@@ -55,3 +55,19 @@ body {
 .animate-pulse-x {
   animation: pulse-x 1.5s ease-in-out infinite;
 }
+
+/* Prototype banner animation */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+    opacity: 0.9;
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(220, 38, 38, 0.8);
+    opacity: 1;
+  }
+}
+
+.prototype-banner {
+  animation: glow-pulse 2s ease-in-out infinite;
+}

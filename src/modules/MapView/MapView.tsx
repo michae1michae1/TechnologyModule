@@ -264,28 +264,7 @@ export default function MapView() {
     <div className="w-full p-4 relative bg-slate-950">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
-          <MapIcon size={20} className="text-slate-300" />
-          <h2 className="text-white font-semibold">Installation Map</h2>
-          
-          {/* Loading progress bar */}
-          {isLoading && (
-            <div className="ml-2 h-1 w-24 bg-slate-700 overflow-hidden rounded-full">
-              <div className="h-full bg-blue-500 animate-pulse-x"></div>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Help Button */}
-          <button
-            onClick={handleHelpClick}
-            className="flex items-center gap-1 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md transition-colors duration-200"
-          >
-            <HelpCircle size={16} />
-            <span>Guide</span>
-          </button>
-          
-          {/* Toggle button */}
+          {/* Toggle button with map icon inside */}
           <button
             onClick={handleToggleMap}
             disabled={isLoading}
@@ -295,6 +274,7 @@ export default function MapView() {
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             } px-3 py-1.5 rounded-md transition-colors duration-200`}
           >
+            <MapIcon size={16} className="mr-1" />
             {isLoading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
@@ -311,6 +291,31 @@ export default function MapView() {
                 <span>Show Map</span>
               </>
             )}
+          </button>
+          
+          {/* Loading progress bar */}
+          {isLoading && (
+            <div className="ml-2 h-1 w-24 bg-slate-700 overflow-hidden rounded-full">
+              <div className="h-full bg-blue-500 animate-pulse-x"></div>
+            </div>
+          )}
+        </div>
+        
+        {/* Prototype Banner - moved to be inline */}
+        <div className="flex-grow mx-4">
+          <div className="prototype-banner bg-red-900/60 border-2 border-red-600 px-4 py-1 rounded-md text-center">
+            <p className="text-red-100 font-bold tracking-wide text-xs md:text-sm">THIS IS A PROTOTYPE: THE DESIGN AND FEATURES ARE SUBJECT TO CHANGE</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Help Button */}
+          <button
+            onClick={handleHelpClick}
+            className="flex items-center gap-1 text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md transition-colors duration-200"
+          >
+            <HelpCircle size={16} />
+            <span>Guide</span>
           </button>
         </div>
       </div>
