@@ -5,7 +5,7 @@ import { useTechnologyData } from '@/hooks/useTechnologyData';
 import { useFilters } from '@/context/FilterContext';
 import { useDetails } from '@/context/DetailsContext';
 import { useCompare } from '@/context/CompareContext';
-import { TechnologyRecord } from '@/types';
+import { TechnologyRecord, FilterState } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Table,
@@ -592,7 +592,14 @@ export default function TechTable() {
     title: string, 
     options: string[] 
   }) => {
-    const selectedValues = filters[column as keyof typeof filters] || [];
+    // Skip this component entirely for costRange
+    if (column === 'costRange') {
+      return null;
+    }
+    
+    // Use type assertion to ensure we're only dealing with string array properties
+    const filterKey = column as Extract<keyof FilterState, 'installation' | 'technologyType' | 'vendor' | 'status'>;
+    const selectedValues = filters[filterKey] || [];
     const [localSelectedValues, setLocalSelectedValues] = useState<string[]>(selectedValues);
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -602,7 +609,7 @@ export default function TechTable() {
     
     // Sync local values with global filter state
     useEffect(() => {
-      setLocalSelectedValues(selectedValues);
+      setLocalSelectedValues(selectedValues as string[]);
     }, [selectedValues]);
     
     // Get available options - include selected values even if they're filtered out
@@ -710,7 +717,7 @@ export default function TechTable() {
     
     // Cancel and revert to previous state
     const cancelSelection = () => {
-      setLocalSelectedValues(selectedValues);
+      setLocalSelectedValues(selectedValues as string[]);
       setIsOpen(false);
     };
     
