@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, Suspense } from 'react';
 import { FilterState } from '../types';
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -15,7 +15,8 @@ const defaultFilters: FilterState = {
   installation: [],
   technologyType: [],
   vendor: [],
-  status: []
+  status: [],
+  costRange: [0, 100]
 };
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -30,7 +31,22 @@ const deserializeArrayParam = (param: string | null): string[] => {
   return param.split(',').filter(Boolean);
 };
 
-export function FilterProvider({ children }: { children: ReactNode }) {
+// Helper to serialize/deserialize cost range
+const serializeCostRange = (range: [number, number]): string => {
+  return `${range[0]},${range[1]}`;
+};
+
+const deserializeCostRange = (param: string | null): [number, number] => {
+  if (!param) return [0, 100];
+  const parts = param.split(',').map(Number);
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return [parts[0], parts[1]];
+  }
+  return [0, 100];
+};
+
+// Client component that uses useSearchParams
+function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -42,14 +58,17 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     const technologyType = deserializeArrayParam(searchParams.get('technology'));
     const vendor = deserializeArrayParam(searchParams.get('vendor'));
     const status = deserializeArrayParam(searchParams.get('status'));
+    const costRange = deserializeCostRange(searchParams.get('cost'));
     
     // If we have any filter params in the URL, apply them
-    if (installation.length || technologyType.length || vendor.length || status.length) {
+    if (installation.length || technologyType.length || vendor.length || status.length || 
+        (costRange[0] > 0 || costRange[1] < 100)) {
       setFilters({
         installation,
         technologyType,
         vendor,
-        status
+        status,
+        costRange
       });
     }
   }, [searchParams]);
@@ -73,6 +92,11 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     
     if (filters.status.length > 0) {
       params.set('status', serializeArrayParam(filters.status));
+    }
+    
+    // Add cost range if it's not default
+    if (filters.costRange && (filters.costRange[0] > 0 || filters.costRange[1] < 100)) {
+      params.set('cost', serializeCostRange(filters.costRange));
     }
     
     // Create the new URL with updated search params
@@ -104,6 +128,11 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       params.set('status', serializeArrayParam(filters.status));
     }
     
+    // Add cost range if it's not default
+    if (filters.costRange && (filters.costRange[0] > 0 || filters.costRange[1] < 100)) {
+      params.set('cost', serializeCostRange(filters.costRange));
+    }
+    
     const baseUrl = window.location.origin + window.location.pathname;
     const queryString = params.toString();
     
@@ -121,6 +150,16 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     <FilterContext.Provider value={{ filters, setFilters, clearFilters, generateShareableLink }}>
       {children}
     </FilterContext.Provider>
+  );
+}
+
+export function FilterProvider({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<div>Loading filters...</div>}>
+      <FilterContextWithSearchParams>
+        {children}
+      </FilterContextWithSearchParams>
+    </Suspense>
   );
 }
 

@@ -20,6 +20,7 @@ export interface FilterState {
   technologyType: string[];
   vendor: string[];
   status: string[];
+  costRange: [number, number]; // Percentage values from 0-100
 }
 
 export interface CompareItem {

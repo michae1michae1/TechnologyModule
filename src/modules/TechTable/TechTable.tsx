@@ -42,9 +42,16 @@ export default function TechTable() {
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showGoToGreen, setShowGoToGreen] = useState(false);
-  const [costRange, setCostRange] = useState<[number, number]>([0, 100]);
   const [showCostPerImpact, setShowCostPerImpact] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  
+  // Use costRange from filters
+  const setCostRange = (range: [number, number]) => {
+    setFilters(prev => ({
+      ...prev,
+      costRange: range
+    }));
+  };
   
   // Handle row click to view details
   const handleRowClick = (record: TechnologyRecord) => {
@@ -511,11 +518,11 @@ export default function TechTable() {
     }
     
     // Add cost range filter using correct filter type
-    if (costRange[0] > 0 || costRange[1] < 100) {
+    if (filters.costRange[0] > 0 || filters.costRange[1] < 100) {
       // Transform percentage range to actual cost range
       const maxCost = 10000; // 10M in K
-      const minCostValue = (costRange[0] / 100) * maxCost;
-      const maxCostValue = (costRange[1] / 100) * maxCost;
+      const minCostValue = (filters.costRange[0] / 100) * maxCost;
+      const maxCostValue = (filters.costRange[1] / 100) * maxCost;
       
       newColumnFilters.push({
         id: 'cost',
@@ -524,7 +531,7 @@ export default function TechTable() {
     }
     
     setColumnFilters(newColumnFilters);
-  }, [filters, costRange]);
+  }, [filters]);
   
   // Setup TanStack table
   const table = useReactTable({
@@ -875,11 +882,16 @@ export default function TechTable() {
 
   // Cost range filter component
   const CostRangeFilter = () => {
-    const [localCostRange, setLocalCostRange] = useState<[number, number]>(costRange);
+    const [localCostRange, setLocalCostRange] = useState<[number, number]>(filters.costRange);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: '0px', left: '0px' });
+
+    // Sync local state with global filter state
+    useEffect(() => {
+      setLocalCostRange(filters.costRange);
+    }, [filters.costRange]);
 
     // Convert cost to dollar value for range filter
     const toDollarValue = (percentage: number) => {
@@ -968,7 +980,7 @@ export default function TechTable() {
       setCostRange([0, 100]);
     };
 
-    const hasActiveFilter = costRange[0] > 0 || costRange[1] < 100;
+    const hasActiveFilter = filters.costRange[0] > 0 || filters.costRange[1] < 100;
     
     // Custom label for the slider that shows dollar values
     const dollarValueLabel = (value: number | undefined) => {
@@ -1078,11 +1090,10 @@ export default function TechTable() {
           <h2 className="text-base font-medium text-white">Technology Data Table</h2>
           
           <div className="flex items-center">
-            {(Object.values(filters).some(arr => arr.length > 0) || costRange[0] > 0 || costRange[1] < 100) && (
+            {(Object.values(filters).some(arr => arr.length > 0) || filters.costRange[0] > 0 || filters.costRange[1] < 100) && (
               <button 
                 onClick={() => {
                   clearFilters();
-                  setCostRange([0, 100]);
                 }}
                 className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors mr-2"
               >
@@ -1164,11 +1175,10 @@ export default function TechTable() {
             </div>
             
             <div className="flex items-center ml-2">
-              {(Object.values(filters).some(arr => arr.length > 0) || costRange[0] > 0 || costRange[1] < 100) && (
+              {(Object.values(filters).some(arr => arr.length > 0) || filters.costRange[0] > 0 || filters.costRange[1] < 100) && (
                 <button 
                   onClick={() => {
                     clearFilters();
-                    setCostRange([0, 100]);
                   }}
                   className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors mr-2"
                 >
