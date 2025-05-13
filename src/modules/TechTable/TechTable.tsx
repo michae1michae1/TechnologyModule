@@ -1097,7 +1097,12 @@ export default function TechTable() {
           <h2 className="text-base font-medium text-white">Technology Data Table</h2>
           
           <div className="flex items-center">
-            {(Object.values(filters).some(arr => arr.length > 0) || filters.costRange[0] > 0 || filters.costRange[1] < 100) && (
+            {(filters.installation.length > 0 || 
+              filters.technologyType.length > 0 || 
+              filters.vendor.length > 0 || 
+              filters.status.length > 0 || 
+              filters.costRange[0] > 0 || 
+              filters.costRange[1] < 100) && (
               <button 
                 onClick={() => {
                   clearFilters();
@@ -1182,7 +1187,12 @@ export default function TechTable() {
             </div>
             
             <div className="flex items-center ml-2">
-              {(Object.values(filters).some(arr => arr.length > 0) || filters.costRange[0] > 0 || filters.costRange[1] < 100) && (
+              {(filters.installation.length > 0 || 
+                filters.technologyType.length > 0 || 
+                filters.vendor.length > 0 || 
+                filters.status.length > 0 || 
+                filters.costRange[0] > 0 || 
+                filters.costRange[1] < 100) && (
                 <button 
                   onClick={() => {
                     clearFilters();
