@@ -270,16 +270,35 @@ export default function MapView() {
             disabled={isLoading}
             className={`flex items-center gap-1 text-sm ${
               isLoading 
-                ? 'bg-slate-700 text-slate-400 cursor-not-allowed' 
+                ? 'bg-slate-700 text-slate-300 cursor-not-allowed' 
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
             } px-3 py-1.5 rounded-md transition-colors duration-200`}
           >
-            <MapIcon size={16} className="mr-1" />
             {isLoading ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                <span>Loading...</span>
-              </>
+              <motion.div
+                animate={{ 
+                  opacity: [1, 0.5, 1],
+                  filter: [
+                    'drop-shadow(0 0 6px rgba(59, 130, 246, 0.7))', 
+                    'drop-shadow(0 0 10px rgba(59, 130, 246, 0.9))',
+                    'drop-shadow(0 0 6px rgba(59, 130, 246, 0.7))'
+                  ] 
+                }}
+                transition={{ 
+                  duration: 0.4, 
+                  repeat: Infinity,
+                  ease: "easeInOut" 
+                }}
+                className="mr-1 text-blue-400"
+              >
+                <MapIcon size={16} />
+              </motion.div>
+            ) : (
+              <MapIcon size={16} className="mr-1" />
+            )}
+            
+            {isLoading ? (
+              <span>Loading...</span>
             ) : isMapVisible ? (
               <>
                 <ChevronUp size={16} />
@@ -293,12 +312,8 @@ export default function MapView() {
             )}
           </button>
           
-          {/* Loading progress bar */}
-          {isLoading && (
-            <div className="ml-2 h-1 w-24 bg-slate-700 overflow-hidden rounded-full">
-              <div className="h-full bg-blue-500 animate-pulse-x"></div>
-            </div>
-          )}
+          {/* Remove loading progress bar */}
+          
         </div>
         
         {/* Prototype Banner - moved to be inline */}

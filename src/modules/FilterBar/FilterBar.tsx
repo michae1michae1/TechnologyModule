@@ -16,6 +16,12 @@ export default function FilterBar() {
     }));
   };
 
+  const hasActiveFilters = 
+    filters.installation.length > 0 || 
+    filters.technologyType.length > 0 || 
+    filters.vendor.length > 0 || 
+    filters.status.length > 0;
+
   return (
     <div className="bg-slate-800 p-4 flex flex-wrap gap-4 items-center sticky top-0 z-10 shadow-lg">
       <div className="flex-grow-0">
@@ -54,10 +60,7 @@ export default function FilterBar() {
         />
       </div>
       
-      {(filters.installation.length > 0 || 
-        filters.technologyType.length > 0 || 
-        filters.vendor.length > 0 || 
-        filters.status.length > 0) && (
+      {hasActiveFilters && (
         <button 
           onClick={clearFilters}
           className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"

@@ -56,6 +56,23 @@ body {
   animation: pulse-x 1.5s ease-in-out infinite;
 }
 
+/* Fast blue pulse animation */
+@keyframes fast-blue-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));
+  }
+  50% {
+    opacity: 0.5;
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.9));
+  }
+}
+
+.fast-blue-pulse {
+  animation: fast-blue-pulse 0.2s ease-in-out infinite;
+  color: #60a5fa; /* blue-400 */
+}
+
 /* Prototype banner animation */
 @keyframes glow-pulse {
   0%, 100% {

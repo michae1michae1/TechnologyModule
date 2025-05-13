@@ -26,13 +26,13 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pin, BarChart2, Search, DollarSign, TrendingUp, Zap } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Pin, BarChart2, Search, DollarSign, TrendingUp, Zap, Link } from 'lucide-react';
 import AnalyticsSection from '../AnalyticsSection/AnalyticsSection';
 import GoToGreenSection from '../GoToGreenSection/GoToGreenSection';
 import { DualRangeSlider } from '@/components/ui/dual-range-slider';
 
 export default function TechTable() {
-  const { filters, setFilters, clearFilters } = useFilters();
+  const { filters, setFilters, clearFilters, generateShareableLink } = useFilters();
   const { filteredRecords, filterOptions } = useTechnologyData(filters);
   const { setSelectedTech, openDetails } = useDetails();
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
@@ -44,6 +44,7 @@ export default function TechTable() {
   const [showGoToGreen, setShowGoToGreen] = useState(false);
   const [costRange, setCostRange] = useState<[number, number]>([0, 100]);
   const [showCostPerImpact, setShowCostPerImpact] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   
   // Handle row click to view details
   const handleRowClick = (record: TechnologyRecord) => {
@@ -1058,6 +1059,18 @@ export default function TechTable() {
     setShowCostPerImpact(prev => !prev);
   };
 
+  // Handle copying the shareable link
+  const handleCopyLink = () => {
+    const link = generateShareableLink();
+    navigator.clipboard.writeText(link);
+    setLinkCopied(true);
+    
+    // Reset copy confirmation after 2 seconds
+    setTimeout(() => {
+      setLinkCopied(false);
+    }, 2000);
+  };
+
   return (
     <div className="w-full p-4 bg-slate-950 overflow-hidden">
       {isTableCollapsed ? (
@@ -1076,6 +1089,17 @@ export default function TechTable() {
                 Clear Filters
               </button>
             )}
+            
+            <button
+              onClick={handleCopyLink}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded mr-2 text-sm ${linkCopied 
+                ? 'bg-green-600 text-white' 
+                : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+              aria-label="Share link with current filters"
+            >
+              <Link size={16} />
+              <span>{linkCopied ? 'Copied!' : 'Share Link'}</span>
+            </button>
             
             <button
               onClick={() => setIsTableCollapsed(false)}
@@ -1151,6 +1175,17 @@ export default function TechTable() {
                   Clear Filters
                 </button>
               )}
+              
+              <button
+                onClick={handleCopyLink}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded mr-2 text-sm ${linkCopied 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                aria-label="Share link with current filters"
+              >
+                <Link size={16} />
+                <span>{linkCopied ? 'Copied!' : 'Share Link'}</span>
+              </button>
               
               <button
                 onClick={() => setIsTableCollapsed(true)}
