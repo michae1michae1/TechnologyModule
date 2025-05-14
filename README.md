@@ -1,6 +1,6 @@
 # Energy Technology Dashboard
 
-A single-page, full-screen dashboard UI for energy managers to explore, analyze, and compare technologies that support base-level energy resiliency.
+A single-page dashboard UI for energy managers to explore, analyze, and compare technologies that support base-level energy resiliency.
 
 ## Features
 
