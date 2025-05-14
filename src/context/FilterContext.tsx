@@ -75,6 +75,8 @@ function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
 
   // Update URL when filters change
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const params = new URLSearchParams();
     
     // Only add non-empty filter arrays to URL
@@ -99,12 +101,19 @@ function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
       params.set('cost', serializeCostRange(filters.costRange));
     }
     
-    // Create the new URL with updated search params
-    const url = new URL(window.location.href);
-    url.search = params.toString();
+    // Get current path respecting basePath if in a GitHub Pages environment
+    const pathname = window.location.pathname;
+    const basePath = process.env.NODE_ENV === 'production' ? '/TechnologyModule' : '';
+    const currentPath = pathname.startsWith(basePath) 
+      ? pathname 
+      : `${basePath}${pathname}`;
     
     // Replace the current URL without causing a full page reload
-    window.history.replaceState({}, '', url);
+    const newUrl = params.toString() 
+      ? `${currentPath}?${params.toString()}` 
+      : currentPath;
+    
+    window.history.replaceState({}, '', newUrl);
   }, [filters]);
 
   // Generate a shareable link with current filters
@@ -133,9 +142,21 @@ function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
       params.set('cost', serializeCostRange(filters.costRange));
     }
     
-    const baseUrl = window.location.origin + window.location.pathname;
-    const queryString = params.toString();
+    // Get base URL handling correctly for GitHub Pages
+    let baseUrl = '';
     
+    if (typeof window !== 'undefined') {
+      // Use window.location for client-side
+      const pathname = window.location.pathname;
+      // For GitHub Pages, ensure we're using the correct base path
+      const basePath = process.env.NODE_ENV === 'production' ? '/TechnologyModule' : '';
+      
+      // Handle the case where the pathname already includes the basePath
+      const pathWithoutBase = pathname.replace(basePath, '') || '/';
+      baseUrl = `${window.location.origin}${basePath}${pathWithoutBase}`;
+    }
+    
+    const queryString = params.toString();
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   };
 
@@ -143,7 +164,14 @@ function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
     setFilters(defaultFilters);
     
     // Clear URL params when filters are cleared
-    window.history.replaceState({}, '', window.location.pathname);
+    if (typeof window !== 'undefined') {
+      const basePath = process.env.NODE_ENV === 'production' ? '/TechnologyModule' : '';
+      const currentPath = window.location.pathname.startsWith(basePath) 
+        ? window.location.pathname 
+        : basePath || '/';
+      
+      window.history.replaceState({}, '', currentPath);
+    }
   };
 
   return (
