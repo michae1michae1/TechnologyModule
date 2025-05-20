@@ -16,7 +16,8 @@ const defaultFilters: FilterState = {
   technologyType: [],
   vendor: [],
   status: [],
-  costRange: [0, 100]
+  costRange: [0, 100],
+  techNeeds: []
 };
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -59,16 +60,18 @@ function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
     const vendor = deserializeArrayParam(searchParams.get('vendor'));
     const status = deserializeArrayParam(searchParams.get('status'));
     const costRange = deserializeCostRange(searchParams.get('cost'));
+    const techNeeds = deserializeArrayParam(searchParams.get('techNeeds'));
     
     // If we have any filter params in the URL, apply them
     if (installation.length || technologyType.length || vendor.length || status.length || 
-        (costRange[0] > 0 || costRange[1] < 100)) {
+        (costRange[0] > 0 || costRange[1] < 100) || techNeeds.length) {
       setFilters({
         installation,
         technologyType,
         vendor,
         status,
-        costRange
+        costRange,
+        techNeeds
       });
     }
   }, [searchParams]);
@@ -94,6 +97,10 @@ function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
     
     if (filters.status.length > 0) {
       params.set('status', serializeArrayParam(filters.status));
+    }
+    
+    if (filters.techNeeds.length > 0) {
+      params.set('techNeeds', serializeArrayParam(filters.techNeeds));
     }
     
     // Add cost range if it's not default
@@ -135,6 +142,10 @@ function FilterContextWithSearchParams({ children }: { children: ReactNode }) {
     
     if (filters.status.length > 0) {
       params.set('status', serializeArrayParam(filters.status));
+    }
+    
+    if (filters.techNeeds.length > 0) {
+      params.set('techNeeds', serializeArrayParam(filters.techNeeds));
     }
     
     // Add cost range if it's not default

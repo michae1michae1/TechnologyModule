@@ -21,6 +21,7 @@ export interface FilterState {
   vendor: string[];
   status: string[];
   costRange: [number, number]; // Percentage values from 0-100
+  techNeeds: string[];
 }
 
 export interface CompareItem {

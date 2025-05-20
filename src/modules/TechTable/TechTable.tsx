@@ -400,6 +400,15 @@ export default function TechTable() {
           )}
         </div>
       ),
+      accessorFn: (row) => {
+        // Map gap levels to numeric values for sorting (Low to High)
+        const gapLevelValues = {
+          'Low': 1,
+          'Medium': 2,
+          'High': 3
+        };
+        return gapLevelValues[row.gapLevel];
+      },
       cell: ({ row }) => renderGapLevel(row.original.gapLevel),
       filterFn: (row, id, filterValue) => {
         return filterValue.includes(row.getValue(id));
@@ -517,6 +526,13 @@ export default function TechTable() {
       });
     }
     
+    if (filters.techNeeds.length > 0) {
+      newColumnFilters.push({
+        id: 'techNeeds',
+        value: filters.techNeeds,
+      });
+    }
+    
     // Add cost range filter using correct filter type
     if (filters.costRange[0] > 0 || filters.costRange[1] < 100) {
       // Transform percentage range to actual cost range
@@ -598,7 +614,7 @@ export default function TechTable() {
     }
     
     // Use type assertion to ensure we're only dealing with string array properties
-    const filterKey = column as Extract<keyof FilterState, 'installation' | 'technologyType' | 'vendor' | 'status'>;
+    const filterKey = column as Extract<keyof FilterState, 'installation' | 'technologyType' | 'vendor' | 'status' | 'techNeeds'>;
     const selectedValues = filters[filterKey] || [];
     const [localSelectedValues, setLocalSelectedValues] = useState<string[]>(selectedValues);
     const [isOpen, setIsOpen] = useState(false);
@@ -629,6 +645,9 @@ export default function TechTable() {
           break;
         case 'technologyType':
           baseOptions = availableFilterOptions.technologies;
+          break;
+        case 'techNeeds':
+          baseOptions = availableFilterOptions.techNeeds;
           break;
         default:
           baseOptions = options;
@@ -690,6 +709,8 @@ export default function TechTable() {
           return availableFilterOptions.vendors.includes(option);
         case 'technologyType':
           return availableFilterOptions.technologies.includes(option);
+        case 'techNeeds':
+          return availableFilterOptions.techNeeds.includes(option);
         default:
           return true;
       }
@@ -1101,6 +1122,7 @@ export default function TechTable() {
               filters.technologyType.length > 0 || 
               filters.vendor.length > 0 || 
               filters.status.length > 0 || 
+              filters.techNeeds.length > 0 ||
               filters.costRange[0] > 0 || 
               filters.costRange[1] < 100) && (
               <button 
@@ -1161,6 +1183,12 @@ export default function TechTable() {
                 options={filterOptions.technologies}
               />
               
+              <FilterSelect 
+                column="techNeeds" 
+                title="TechNeeds" 
+                options={filterOptions.techNeeds}
+              />
+              
               <CostRangeFilter />
               
               <button
@@ -1191,6 +1219,7 @@ export default function TechTable() {
                 filters.technologyType.length > 0 || 
                 filters.vendor.length > 0 || 
                 filters.status.length > 0 || 
+                filters.techNeeds.length > 0 ||
                 filters.costRange[0] > 0 || 
                 filters.costRange[1] < 100) && (
                 <button 

@@ -24,6 +24,11 @@ export function useTechnologyData(filters: FilterState) {
         return false;
       }
       
+      // Filter by techNeeds
+      if (filters.techNeeds.length > 0 && !record.techNeeds.some(need => filters.techNeeds.includes(need))) {
+        return false;
+      }
+      
       // Filter by status (which now serves as "outreach" filter)
       if (filters.status.length > 0) {
         // If record has an outreachLevel, check against that
@@ -58,11 +63,15 @@ export function useTechnologyData(filters: FilterState) {
     // Get outreach levels, prioritizing actual outreachLevel field when available
     const outreachLevels = ['Level 1', 'Level 2', 'Level 3', 'Level 4'];
     
+    // Get unique tech needs
+    const techNeeds = [...new Set(records.flatMap(record => record.techNeeds))];
+    
     return {
       installations,
       technologies,
       vendors,
-      statuses: outreachLevels
+      statuses: outreachLevels,
+      techNeeds
     };
   }, [records]);
   

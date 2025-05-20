@@ -28,7 +28,7 @@ export default function CompareSection() {
   }
   
   return (
-    <div className="w-full bg-slate-950 border-y border-slate-700">
+    <div className="w-full bg-slate-950">
       <div className="flex justify-between items-center p-3">
         <h2 className="text-lg font-bold text-white">Technology Comparison</h2>
         <div className="flex items-center">
@@ -77,6 +77,11 @@ export default function CompareSection() {
                     {item.record && (
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
+                          <span className="text-xs text-slate-400">Installation</span>
+                          <span className="text-xs text-slate-200">{item.record.installation}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
                           <span className="text-xs text-slate-400">Outreach</span>
                           <OutreachBadge record={item.record} />
                         </div>
@@ -115,11 +120,6 @@ export default function CompareSection() {
                               style={{ width: `${Math.min((item.record.resiliencyImpact / 10) * 100, 100)}%` }}
                             ></div>
                           </div>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-400">Installation</span>
-                          <span className="text-xs text-slate-200">{item.record.installation}</span>
                         </div>
                       </div>
                     )}

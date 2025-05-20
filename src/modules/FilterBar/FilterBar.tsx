@@ -20,7 +20,8 @@ export default function FilterBar() {
     filters.installation.length > 0 || 
     filters.technologyType.length > 0 || 
     filters.vendor.length > 0 || 
-    filters.status.length > 0;
+    filters.status.length > 0 ||
+    filters.techNeeds.length > 0;
 
   return (
     <div className="bg-slate-800 p-4 flex flex-wrap gap-4 items-center sticky top-0 z-10 shadow-lg">
@@ -57,6 +58,15 @@ export default function FilterBar() {
           options={filterOptions.statuses.map(item => ({ value: item, label: item }))}
           values={filters.status}
           onChange={(values) => updateFilter('status', values)}
+        />
+      </div>
+      
+      <div className="flex-grow-0">
+        <MultiSelect
+          label="TechNeeds"
+          options={filterOptions.techNeeds.map(item => ({ value: item, label: item }))}
+          values={filters.techNeeds}
+          onChange={(values) => updateFilter('techNeeds', values)}
         />
       </div>
       

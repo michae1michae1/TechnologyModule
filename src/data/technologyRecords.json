@@ -165,7 +165,7 @@
     "technologyDesc": "Extracts thermal energy from the Earth for reliable power.",
     "status": "Prototype",
     "outreachLevel": "Level 1",
-    "cost": 4000,
+    "cost": 3000,
     "vendor": "GeoHeatPro",
     "vendorDesc": "Pioneers in geothermal energy extraction and plant development.",
     "installation": "Hill AFB",
