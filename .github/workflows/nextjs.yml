@@ -77,10 +77,17 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
+      - name: Clean existing artifacts
+        run: |
+          echo "Cleaning existing artifacts to avoid conflicts"
+          rm -rf ./_site
+          mkdir -p ./_site
+          cp -r ./out/* ./_site/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ./_site
+          name: github-pages-${{ github.run_id }}
 
   # Deployment job
   deploy:
@@ -93,3 +100,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}
