@@ -239,20 +239,10 @@ export default function TechTable() {
       accessorKey: "technology",
       header: ({ column }) => (
         <div
-          className="flex items-center cursor-pointer"
+          className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Technology
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUp className="ml-1 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDown className="ml-1 h-4 w-4" />
-          ) : (
-            <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-              <ChevronUp className="h-2 w-4" />
-              <ChevronDown className="h-2 w-4 -mt-1" />
-            </div>
-          )}
         </div>
       ),
       cell: ({ row }) => <div className="font-medium">{row.original.technology}</div>,
@@ -264,20 +254,10 @@ export default function TechTable() {
       accessorKey: "status",
       header: ({ column }) => (
         <div
-          className="flex items-center cursor-pointer"
+          className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Outreach
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUp className="ml-1 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDown className="ml-1 h-4 w-4" />
-          ) : (
-            <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-              <ChevronUp className="h-2 w-4" />
-              <ChevronDown className="h-2 w-4 -mt-1" />
-            </div>
-          )}
         </div>
       ),
       cell: ({ row }) => {
@@ -316,20 +296,10 @@ export default function TechTable() {
       accessorKey: "vendor",
       header: ({ column }) => (
         <div
-          className="flex items-center cursor-pointer"
+          className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Vendor
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUp className="ml-1 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDown className="ml-1 h-4 w-4" />
-          ) : (
-            <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-              <ChevronUp className="h-2 w-4" />
-              <ChevronDown className="h-2 w-4 -mt-1" />
-            </div>
-          )}
         </div>
       ),
       cell: ({ row }) => row.original.vendor,
@@ -341,20 +311,10 @@ export default function TechTable() {
       accessorKey: "installation",
       header: ({ column }) => (
         <div
-          className="flex items-center cursor-pointer"
+          className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Installation
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUp className="ml-1 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDown className="ml-1 h-4 w-4" />
-          ) : (
-            <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-              <ChevronUp className="h-2 w-4" />
-              <ChevronDown className="h-2 w-4 -mt-1" />
-            </div>
-          )}
         </div>
       ),
       cell: ({ row }) => row.original.installation,
@@ -364,7 +324,14 @@ export default function TechTable() {
     },
     {
       accessorKey: "techNeeds",
-      header: "Tech Needs",
+      header: ({ column }) => (
+        <div
+          className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Tech Tags
+        </div>
+      ),
       cell: ({ row }) => (
         <div className="flex flex-wrap gap-1">
           {row.original.techNeeds.map(need => (
@@ -384,20 +351,10 @@ export default function TechTable() {
       accessorKey: "gapLevel",
       header: ({ column }) => (
         <div
-          className="flex items-center cursor-pointer"
+          className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Gap Level
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUp className="ml-1 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDown className="ml-1 h-4 w-4" />
-          ) : (
-            <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-              <ChevronUp className="h-2 w-4" />
-              <ChevronDown className="h-2 w-4 -mt-1" />
-            </div>
-          )}
+          Gap Priority
         </div>
       ),
       accessorFn: (row) => {
@@ -425,20 +382,10 @@ export default function TechTable() {
       },
       header: ({ column }) => (
         <div
-          className="flex items-center cursor-pointer"
+          className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Resiliency Impact
-          {column.getIsSorted() === "asc" ? (
-            <ChevronUp className="ml-1 h-4 w-4" />
-          ) : column.getIsSorted() === "desc" ? (
-            <ChevronDown className="ml-1 h-4 w-4" />
-          ) : (
-            <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-              <ChevronUp className="h-2 w-4" />
-              <ChevronDown className="h-2 w-4 -mt-1" />
-            </div>
-          )}
+          REAF Impact
         </div>
       ),
       cell: ({ row }) => {
@@ -457,20 +404,10 @@ export default function TechTable() {
       header: ({ column }) => (
         <div className="flex items-center">
           <div
-            className="flex items-center cursor-pointer"
+            className={`cursor-pointer ${column.getIsSorted() ? "text-white font-semibold drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" : ""}`}
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             {showCostPerImpact ? "Cost Per Impact" : "Cost"}
-            {column.getIsSorted() === "asc" ? (
-              <ChevronUp className="ml-1 h-4 w-4" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ChevronDown className="ml-1 h-4 w-4" />
-            ) : (
-              <div className="ml-1 h-4 w-4 opacity-30 flex items-center">
-                <ChevronUp className="h-2 w-4" />
-                <ChevronDown className="h-2 w-4 -mt-1" />
-              </div>
-            )}
           </div>
           <button 
             onClick={toggleCostPerImpactView} 
@@ -1185,7 +1122,7 @@ export default function TechTable() {
               
               <FilterSelect 
                 column="techNeeds" 
-                title="TechNeeds" 
+                title="Tech Tags" 
                 options={filterOptions.techNeeds}
               />
               

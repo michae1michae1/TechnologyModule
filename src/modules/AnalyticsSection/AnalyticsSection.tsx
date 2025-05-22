@@ -347,7 +347,7 @@ const TechnologyEvaluation = ({ data }: { data: ExtendedTechnologyRecord[] }) =>
           </div>
         </div>
         <div className="bg-slate-800 p-2 rounded">
-          <div className="text-sm font-medium">Gap Level Distribution</div>
+          <div className="text-sm font-medium">Gap Priority Distribution</div>
           <div className="flex justify-between text-xs mt-2">
             <span>Low: {data.filter(i => i.gapLevel === 'Low').length}</span>
             <span>Medium: {data.filter(i => i.gapLevel === 'Medium').length}</span>

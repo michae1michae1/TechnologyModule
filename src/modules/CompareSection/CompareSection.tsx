@@ -105,7 +105,7 @@ export default function CompareSection() {
                         </div>
                         
                         <div className="flex justify-between items-center">
-                          <span className="text-xs text-slate-400">Gap Level</span>
+                          <span className="text-xs text-slate-400">Gap Priority</span>
                           <GapBadge level={item.record.gapLevel} />
                         </div>
                         

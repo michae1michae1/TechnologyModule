@@ -254,7 +254,7 @@ export default function GoToGreenSection() {
                       className="text-center py-2 px-2 text-xs uppercase tracking-wider text-slate-400 cursor-pointer hover:text-white"
                       onClick={() => handleSort('gapLevel')}
                     >
-                      Gap Level
+                      Gap Priority
                     </th>
                     <th 
                       className="text-center py-2 px-2 text-xs uppercase tracking-wider text-slate-400 cursor-pointer hover:text-white"
@@ -409,7 +409,7 @@ export default function GoToGreenSection() {
                           className="text-center py-2 px-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer hover:text-white"
                           onClick={() => handleTechSort('impact')}
                         >
-                          Impact
+                          REAF Potential
                         </th>
                         <th 
                           className="text-right py-2 px-3 text-xs uppercase tracking-wider text-slate-400 cursor-pointer hover:text-white"

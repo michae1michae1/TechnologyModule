@@ -267,7 +267,6 @@ const TechDetails = memo(function TechDetails({
   // Update the notes rendering in both left and right content
   const renderNotesContent = () => (
     <div className="space-y-2">
-      <div className="text-slate-300 font-medium">Notes</div>
       <textarea
         value={notes[selectedTech.id] || ''}
         onChange={handleNotesChange}
@@ -420,33 +419,31 @@ const TechDetails = memo(function TechDetails({
       case 'strategies':
         // Show strategies with impact contribution
         const totalImpact = selectedTech.resiliencyImpact;
+        
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Resilience Strategies</div>
-            <div className="space-y-2">
-              {mockStrategiesData.map(strategy => {
-                // Calculate actual impact contribution
-                const impactContribution = (strategy.contributionPercent / 100) * totalImpact;
-                return (
-                  <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
-                    <div className="font-medium text-slate-200 mb-1 flex justify-between">
-                      <span>{strategy.title}</span>
-                      <span className="text-green-400">{strategy.contributionPercent}%</span>
-                    </div>
-                    <p className="text-slate-400 text-xs mb-2">{strategy.description}</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-full bg-slate-700 rounded-full h-1.5">
-                        <div 
-                          className="bg-green-500 h-1.5 rounded-full" 
-                          style={{ width: `${strategy.contributionPercent}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-green-400">+{impactContribution.toFixed(1)}</span>
-                    </div>
+            {mockStrategiesData.map(strategy => {
+              // Calculate actual impact contribution
+              const impactContribution = (strategy.contributionPercent / 100) * totalImpact;
+              return (
+                <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
+                  <div className="font-medium text-slate-200 mb-1 flex justify-between">
+                    <span>{strategy.title}</span>
+                    <span className="text-green-400">{strategy.contributionPercent}%</span>
                   </div>
-                );
-              })}
-            </div>
+                  <p className="text-slate-400 text-xs mb-2">{strategy.description}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-full bg-slate-700 rounded-full h-1.5">
+                      <div 
+                        className="bg-green-500 h-1.5 rounded-full" 
+                        style={{ width: `${strategy.contributionPercent}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-green-400">+{impactContribution.toFixed(1)}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       case 'notes':
@@ -605,33 +602,31 @@ const TechDetails = memo(function TechDetails({
       case 'strategies':
         // Show strategies with impact contribution
         const totalImpact = selectedTech.resiliencyImpact;
+        
         return (
           <div className="space-y-2">
-            <div className="text-slate-300 font-medium">Resilience Strategies</div>
-            <div className="space-y-2">
-              {mockStrategiesData.map(strategy => {
-                // Calculate actual impact contribution
-                const impactContribution = (strategy.contributionPercent / 100) * totalImpact;
-                return (
-                  <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
-                    <div className="font-medium text-slate-200 mb-1 flex justify-between">
-                      <span>{strategy.title}</span>
-                      <span className="text-green-400">{strategy.contributionPercent}%</span>
-                    </div>
-                    <p className="text-slate-400 text-xs mb-2">{strategy.description}</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-full bg-slate-700 rounded-full h-1.5">
-                        <div 
-                          className="bg-green-500 h-1.5 rounded-full" 
-                          style={{ width: `${strategy.contributionPercent}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs text-green-400">+{impactContribution.toFixed(1)}</span>
-                    </div>
+            {mockStrategiesData.map(strategy => {
+              // Calculate actual impact contribution
+              const impactContribution = (strategy.contributionPercent / 100) * totalImpact;
+              return (
+                <div key={strategy.id} className="bg-slate-800 p-2 rounded border border-slate-700">
+                  <div className="font-medium text-slate-200 mb-1 flex justify-between">
+                    <span>{strategy.title}</span>
+                    <span className="text-green-400">{strategy.contributionPercent}%</span>
                   </div>
-                );
-              })}
-            </div>
+                  <p className="text-slate-400 text-xs mb-2">{strategy.description}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-full bg-slate-700 rounded-full h-1.5">
+                      <div 
+                        className="bg-green-500 h-1.5 rounded-full" 
+                        style={{ width: `${strategy.contributionPercent}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-green-400">+{impactContribution.toFixed(1)}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       case 'outreach':
